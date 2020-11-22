@@ -22,9 +22,9 @@ export const seedDb = (): Promise<mysql.MysqlError | void> => {
         id INT(12) AUTO_INCREMENT,
         contentType VARCHAR(6) NOT NULL,
         time TINYTEXT NOT NULL,
-        content TEXT,
-        originalMsgId INT(12),
-        userId INT(8),
+        content TEXT DEFAULT NULL,
+        originalMsgId INT(12) DEFAULT NULL,
+        userId INT(8) DEFAULT NULL,
         PRIMARY KEY (id),
         FOREIGN KEY (userId) REFERENCES user(id)
       )`);
@@ -39,11 +39,13 @@ export const seedDb = (): Promise<mysql.MysqlError | void> => {
 
       db.query(`CREATE TABLE IF NOT EXISTS channel (
         id INT(8) AUTO_INCREMENT,
+        serverId INT(8),
         name TINYTEXT NOT NULL,
-        time TINYTEXT NOT NULL,
-        content TEXT,
-        originalMsgId INT(12),
-        serverId INT(8) NOT NULL,
+        content TEXT DEFAULT NULL,
+        private BOOLEAN DEFAULT NULL,
+        topic TEXT DEFAULT NULL,
+        welcomeMsg TEXT DEFAULT NULL,
+        description TEXT DEFAULT NULL,
         PRIMARY KEY (id),
         FOREIGN KEY (serverId) REFERENCES server(id)
       )`);

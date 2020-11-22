@@ -5,6 +5,7 @@ dotenv.config();
 
 const host = process.env.HOST || 'localhost';
 const dbPort = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306;
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 const dbPoolOptions: mysql.ConnectionConfig = {
   host: host,
@@ -14,6 +15,7 @@ const dbPoolOptions: mysql.ConnectionConfig = {
 };
 
 export default {
+  port,
   mysql: {
     connectionOptions: dbPoolOptions,
   },

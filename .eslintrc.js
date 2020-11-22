@@ -12,6 +12,7 @@ module.exports = {
   rules: {
     'prefer-destructuring': ['error', { object: true, array: false }],
     '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
     'prettier/prettier': ['error', { singleQuote: true }],
   },
 };
