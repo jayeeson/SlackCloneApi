@@ -1,11 +1,13 @@
 export enum ErrorTypes {
   'validation',
   'db',
+  'init',
+  'config',
 }
 
 export class CustomError extends Error {
-  public status: number;
-  public type: ErrorTypes;
+  status: number;
+  type: ErrorTypes;
 
   constructor(status: number, message: string, type: ErrorTypes) {
     super(message);

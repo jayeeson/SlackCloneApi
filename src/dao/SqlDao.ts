@@ -10,7 +10,7 @@ export class SqlDao implements IDao {
     this.db = sql;
   }
 
-  public getOne = <T>(query: string, params?: any[]): Promise<T | undefined> => {
+  getOne = <T>(query: string, params?: any[]): Promise<T | undefined> => {
     return new Promise<T>((resolve, reject) => {
       try {
         this.db.query(query, params, (err: mysql.MysqlError | null, results: T[]) => {
@@ -29,7 +29,7 @@ export class SqlDao implements IDao {
     });
   };
 
-  public getAll = <T>(query: string, params?: any[]): Promise<T[]> => {
+  getAll = <T>(query: string, params?: any[]): Promise<T[]> => {
     return new Promise<T[]>((resolve, reject) => {
       try {
         this.db.query(query, params, (err: mysql.MysqlError | null, results: T[]) => {
@@ -48,7 +48,7 @@ export class SqlDao implements IDao {
     });
   };
 
-  public run = (query: string, params?: any[]): Promise<OkPacket> => {
+  run = (query: string, params?: any[]): Promise<OkPacket> => {
     return new Promise<OkPacket>((resolve, reject) => {
       try {
         this.db.query(query, params, (err: mysql.MysqlError | null, results: OkPacket) => {

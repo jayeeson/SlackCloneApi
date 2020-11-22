@@ -18,6 +18,12 @@ export const seedDb = (): Promise<mysql.MysqlError | void> => {
         pass TINYTEXT NOT NULL
       )`);
 
+      db.query(`CREATE TABLE IF NOT EXISTS blacklist (
+        id INT(8) PRIMARY KEY AUTO_INCREMENT,
+        token TEXT NOT NULL,
+        insertDate BIGINT NOT NULL
+      )`);
+
       db.query(`CREATE TABLE IF NOT EXISTS message (
         id INT(12) AUTO_INCREMENT,
         contentType VARCHAR(6) NOT NULL,

@@ -2,6 +2,8 @@ import { hashPassword } from '../helpers/bcrypt';
 import bcrypt from 'bcrypt';
 import { AuthRepository } from './AuthRepository';
 import { CustomError, ErrorTypes } from '../CustomError';
+import { createToken } from '../helpers/jwt';
+import { JwtPayload } from '../types';
 
 export class AuthService {
   repository: AuthRepository;
@@ -10,7 +12,7 @@ export class AuthService {
     this.repository = repository;
   }
 
-  login = async (username: string, password: string): Promise<string> => {
+  validatePassword = async (username: string, password: string) => {
     const user = await this.repository.getByUser(username);
     if (!user) {
       throw new CustomError(401, 'user not found', ErrorTypes.validation);
@@ -19,11 +21,10 @@ export class AuthService {
     if (!passMatch) {
       throw new CustomError(401, 'Incorrect password', ErrorTypes.validation);
     }
-    ///\todo: issue jwt
     return username;
   };
 
-  register = async (username: string, password: string): Promise<string> => {
+  register = async (username: string, password: string) => {
     const user = await this.repository.getByUser(username);
     if (user) {
       throw new CustomError(403, 'Username already taken', ErrorTypes.validation);
@@ -31,7 +32,16 @@ export class AuthService {
 
     const hash = await hashPassword(password);
     await this.repository.createUser(username, hash);
-    ///\todo: issue jwt token
     return username;
   };
+
+  logout = async (token: string) => {
+    await this.repository.blacklistToken(token);
+  };
+
+  generateToken(username: string) {
+    const data: JwtPayload = { username };
+    const token = createToken(data);
+    return token;
+  }
 }

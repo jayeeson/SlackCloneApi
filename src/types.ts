@@ -1,3 +1,8 @@
+export enum DeploymentType {
+  PROD,
+  DEV,
+}
+
 export interface User {
   id: number;
   name: string;
@@ -43,4 +48,13 @@ export enum MessageContentType {
   STRING = 'STRING',
   QUOTE = 'QUOTE',
   THREAD = 'THREAD',
+}
+
+export interface JwtPayload {
+  username: string;
+}
+
+export interface JwtDecoded extends JwtPayload {
+  iat: string;
+  exp: string;
 }

@@ -1,15 +1,13 @@
-import { Request, Response } from 'express';
-import { CustomError, ErrorTypes } from '../CustomError';
+import { NextFunction, Request, Response } from 'express';
+import { CustomError } from '../CustomError';
 
-export const handleCustomErrors = (err: any, req: Request, res: Response) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const handleCustomErrors = (err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.log(err);
+
   if (err.name === 'CustomError') {
-    const { message, name, type } = err as CustomError;
-    if (type === ErrorTypes.validation) {
-      return res.status(400).send(JSON.stringify({ message, name, type }));
-    } else if (type === ErrorTypes.db) {
-      return res.status(500).send(message);
-    }
-  } else {
-    res.status(500).send('unknown server error');
+    const { message, name, type, status } = err as CustomError;
+    return res.status(status).send(JSON.stringify({ message, name, type }));
   }
+  return res.sendStatus(500);
 };
