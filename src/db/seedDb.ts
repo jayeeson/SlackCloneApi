@@ -70,6 +70,7 @@ export const seedDb = (): Promise<mysql.MysqlError | void> => {
         FOREIGN KEY (userId) REFERENCES user(id)
       )`);
 
+      console.log('seeded db');
       resolve();
     });
   });

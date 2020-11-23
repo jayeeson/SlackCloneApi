@@ -1,8 +1,8 @@
 import mysql from 'mysql';
 import dotenv from 'dotenv';
-import { CustomError, ErrorTypes } from './CustomError';
+import { CustomError } from './CustomError';
 import { Algorithm } from 'jsonwebtoken';
-import { DeploymentType as Mode } from './types';
+import { DeploymentType as Mode, ErrorTypes } from './types';
 import { CookieOptions } from 'express';
 
 dotenv.config();
@@ -18,7 +18,12 @@ const url = mode === Mode.PROD ? `${protocol}://${host}` : `${protocol}://${host
 
 const tokenSecret = process.env.TOKEN_SECRET;
 if (!tokenSecret) {
-  throw new CustomError(500, 'Server start issue', ErrorTypes.init);
+  throw new CustomError(500, 'Server setup issue', ErrorTypes.CONFIG);
+}
+
+const clientUrl = process.env.CLIENT_URL;
+if (!clientUrl) {
+  throw new CustomError(500, 'Server setup issue', ErrorTypes.CONFIG);
 }
 
 const dbPoolOptions: mysql.ConnectionConfig = {
@@ -43,6 +48,10 @@ const cookie = {
   options: cookieOptions,
 };
 
+const cors = {
+  options: { origin: clientUrl, credentials: true },
+};
+
 export default {
   port,
   mysql: {
@@ -53,4 +62,5 @@ export default {
     options: jwtOptions as typeof jwtOptions,
     cookie,
   },
+  cors,
 };

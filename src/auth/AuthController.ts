@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import config from '../config';
-import { CustomError, ErrorTypes } from '../CustomError';
+import { CustomError } from '../CustomError';
 import { attachTokenToResponse } from '../helpers/jwt';
+import { ErrorTypes } from '../types';
 import { AuthService } from './AuthService';
 
 export class AuthController {
@@ -14,7 +15,7 @@ export class AuthController {
   login = async (req: Request, res: Response) => {
     const { username, password } = req.body;
     if (!username || !password) {
-      throw new CustomError(400, 'Missing username / password', ErrorTypes.validation);
+      throw new CustomError(400, 'Missing username / password', ErrorTypes.VALIDATION);
     }
 
     const loggedInUsername = await this.service.validatePassword(username, password);
@@ -28,7 +29,7 @@ export class AuthController {
   register = async (req: Request, res: Response) => {
     const { username, password } = req.body;
     if (!username || !password) {
-      throw new CustomError(400, 'Missing username / password', ErrorTypes.validation);
+      throw new CustomError(400, 'Missing username / password', ErrorTypes.VALIDATION);
     }
 
     const registeredUsername = await this.service.register(username, password);

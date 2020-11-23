@@ -7,5 +7,6 @@ declare namespace NodeJS {
     PORT: string | undefined;
     DB_PORT: string | undefined;
     TOKEN_SECRET: string | undefined;
+    CLIENT_URL: string | undefined;
   }
 }

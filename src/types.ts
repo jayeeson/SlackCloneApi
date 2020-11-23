@@ -58,3 +58,10 @@ export interface JwtDecoded extends JwtPayload {
   iat: string;
   exp: string;
 }
+
+export enum ErrorTypes {
+  VALIDATION = 'VALIDATION',
+  DB = 'DB',
+  INIT = 'INIT',
+  CONFIG = 'CONFIG',
+}

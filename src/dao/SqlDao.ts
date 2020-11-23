@@ -1,6 +1,7 @@
 import mysql, { OkPacket } from 'mysql';
-import { CustomError, ErrorTypes } from '../CustomError';
+import { CustomError } from '../CustomError';
 import sql from '../db/db';
+import { ErrorTypes } from '../types';
 import { IDao } from './IDao';
 
 export class SqlDao implements IDao {
@@ -24,7 +25,7 @@ export class SqlDao implements IDao {
         });
       } catch (err) {
         console.log(err);
-        throw new CustomError(500, 'Database issue', ErrorTypes.db);
+        throw new CustomError(500, 'Database issue', ErrorTypes.DB);
       }
     });
   };
@@ -43,7 +44,7 @@ export class SqlDao implements IDao {
         });
       } catch (err) {
         console.log(err);
-        throw new CustomError(500, 'Database issue', ErrorTypes.db);
+        throw new CustomError(500, 'Database issue', ErrorTypes.DB);
       }
     });
   };
@@ -59,7 +60,7 @@ export class SqlDao implements IDao {
         });
       } catch (err) {
         console.log(err);
-        throw new CustomError(500, 'Database issue', ErrorTypes.db);
+        throw new CustomError(500, 'Database issue', ErrorTypes.DB);
       }
     });
   };

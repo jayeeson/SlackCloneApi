@@ -1,9 +1,4 @@
-export enum ErrorTypes {
-  'validation',
-  'db',
-  'init',
-  'config',
-}
+import { ErrorTypes } from './types';
 
 export class CustomError extends Error {
   status: number;
