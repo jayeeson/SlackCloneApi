@@ -6,7 +6,7 @@ import authRoutes from './auth/authRoutes';
 import { handleCustomErrors } from './middleware/errors';
 import { seedDb } from './db/seedDb';
 import config from './config';
-import { initSocketServer } from './helpers/socketio';
+import { launchSocketServer } from './helpers/socketio';
 
 seedDb();
 
@@ -18,7 +18,7 @@ app.use(cookieParser());
 app.use(handleCustomErrors);
 app.use(authRoutes);
 
-const httpServer = initSocketServer(app);
+const httpServer = launchSocketServer(app);
 
 httpServer.listen(app.get('port'), () => {
   console.log('App started on port', app.get('port'));

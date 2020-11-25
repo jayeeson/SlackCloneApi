@@ -3,13 +3,20 @@ export enum DeploymentType {
   DEV,
 }
 
+export interface SlackClient {
+  socketId: string;
+  userId: number;
+  serverId: number;
+  channelId: number;
+}
+
 export interface User {
   id: number;
   name: string;
   pass: string;
 }
 
-export interface Message {
+export interface SlackMessage {
   id: number;
   contentType: MessageContentType;
   userId: number;
@@ -21,7 +28,7 @@ export interface Message {
 export interface SlackServer {
   id: number;
   name: string;
-  owner: number; // owner's user id
+  ownerUserId: number;
 }
 
 export interface SlackChannel {
@@ -37,6 +44,7 @@ export interface SlackChannel {
 export interface LinkChannelUser {
   channelId: number;
   userId: number;
+  lastAccessed: Date;
 }
 
 export interface LinkServerChannel {

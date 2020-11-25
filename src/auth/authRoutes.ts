@@ -1,6 +1,6 @@
 import express from 'express';
 import { SqlDao } from '../dao/SqlDao';
-import { asyncWrapper } from '../utils/asyncWrapper';
+import { asyncWrapper } from '../utils/wrappers';
 import { AuthController } from './AuthController';
 import { AuthRepository } from './AuthRepository';
 import { AuthService } from './AuthService';

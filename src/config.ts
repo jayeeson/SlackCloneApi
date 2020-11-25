@@ -31,6 +31,7 @@ const dbPoolOptions: mysql.ConnectionConfig = {
   port: dbPort,
   user: process.env.DB_USER,
   password: process.env.DB_PASS || '',
+  dateStrings: true,
 };
 
 const jwtOptions = {

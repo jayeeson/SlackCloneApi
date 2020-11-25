@@ -27,20 +27,22 @@ export const seedDb = (): Promise<mysql.MysqlError | void> => {
       db.query(`CREATE TABLE IF NOT EXISTS message (
         id INT(12) AUTO_INCREMENT,
         contentType VARCHAR(6) NOT NULL,
-        time TINYTEXT NOT NULL,
+        time DATETIME NOT NULL,
         content TEXT DEFAULT NULL,
         originalMsgId INT(12) DEFAULT NULL,
         userId INT(8) DEFAULT NULL,
+        channelId INT(8) NOT NULL,
         PRIMARY KEY (id),
-        FOREIGN KEY (userId) REFERENCES user(id)
+        FOREIGN KEY (userId) REFERENCES user(id),
+        FOREIGN KEY (channelId) REFERENCES channel(id),
       )`);
 
       db.query(`CREATE TABLE IF NOT EXISTS server (
         id INT(8) AUTO_INCREMENT,
         name TINYTEXT NOT NULL,
-        owner INT(8) NOT NULL,
+        ownerUserId INT(8) NOT NULL,
         PRIMARY KEY (id),
-        FOREIGN KEY (owner) REFERENCES user(id)
+        FOREIGN KEY (ownerUserId) REFERENCES user(id)
       )`);
 
       db.query(`CREATE TABLE IF NOT EXISTS channel (
@@ -56,18 +58,29 @@ export const seedDb = (): Promise<mysql.MysqlError | void> => {
         FOREIGN KEY (serverId) REFERENCES server(id)
       )`);
 
-      db.query(`CREATE TABLE IF NOT EXISTS link_server_channel (
+      db.query(`CREATE TABLE IF NOT EXISTS link_server_user (
         serverId INT(8) NOT NULL,
-        channelId INT(8) NOT NULL,
+        userId INT(8) NOT NULL,
         FOREIGN KEY (serverId) REFERENCES server(id),
-        FOREIGN KEY (channelId) REFERENCES channel(id)
+        FOREIGN KEY (userId) REFERENCES user(id)
       )`);
 
       db.query(`CREATE TABLE IF NOT EXISTS link_channel_user (
         channelId INT(8) NOT NULL,
         userId INT(8) NOT NULL,
+        lastAccess DATETIME DEFAULT NULL,
         FOREIGN KEY (channelId) REFERENCES channel(id),
         FOREIGN KEY (userId) REFERENCES user(id)
+      )`);
+
+      db.query(`CREATE TABLE IF NOT EXISTS client (
+        socketId VARCHAR(20) PRIMARY KEY NOT NULL,
+        userId INT(8) DEFAULT NULL,
+        serverId INT(8) DEFAULT NULL,
+        channelId INT(8) DEFAULT NULL,
+        FOREIGN KEY (userId) REFERENCES user(id),
+        FOREIGN KEY (channelId) REFERENCES channel(id),
+        FOREIGN KEY (serverId) REFERENCES server(id)
       )`);
 
       console.log('seeded db');
