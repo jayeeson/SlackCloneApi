@@ -1,4 +1,3 @@
-import cors from 'cors';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
@@ -11,7 +10,6 @@ import { launchSocketServer } from './helpers/socketio';
 seedDb();
 
 const app = express();
-app.use(cors(config.cors.options));
 app.set('port', config.port);
 app.use(bodyParser.json());
 app.use(cookieParser());

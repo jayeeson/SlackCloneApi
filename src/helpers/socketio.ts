@@ -1,6 +1,5 @@
 import http from 'http';
 import socketio, { Socket } from 'socket.io';
-import config from '../config';
 import { Express } from 'express';
 import { SqlDao } from '../dao/SqlDao';
 import { SocketRepository } from '../socket/SocketRepository';
@@ -15,7 +14,7 @@ const socketController = new SocketController(socketService);
 
 export const launchSocketServer = (app: Express) => {
   const server = http.createServer(app);
-  const io = new socketio.Server(server, { cors: config.cors.options });
+  const io = new socketio.Server(server);
 
   io.on('connect', (socket: Socket) => {
     socketController.onConnect(socket);

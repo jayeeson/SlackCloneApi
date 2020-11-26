@@ -21,10 +21,15 @@ if (!tokenSecret) {
   throw new CustomError(500, 'Server setup issue', ErrorTypes.CONFIG);
 }
 
-const clientUrl = process.env.CLIENT_URL;
-if (!clientUrl) {
-  throw new CustomError(500, 'Server setup issue', ErrorTypes.CONFIG);
-}
+// Client currently uses proxy. Reenable cors if that changes.
+// const clientUrl = process.env.CLIENT_URL;
+// if (!clientUrl) {
+//   throw new CustomError(500, 'Server setup issue', ErrorTypes.CONFIG);
+// }
+
+// const cors = {
+//   options: { origin: clientUrl, credentials: true },
+// };
 
 const dbPoolOptions: mysql.ConnectionConfig = {
   host: host,
@@ -49,11 +54,8 @@ const cookie = {
   options: cookieOptions,
 };
 
-const cors = {
-  options: { origin: clientUrl, credentials: true },
-};
-
 export default {
+  // cors,
   port,
   mysql: {
     connectionOptions: dbPoolOptions,
@@ -63,5 +65,4 @@ export default {
     options: jwtOptions as typeof jwtOptions,
     cookie,
   },
-  cors,
 };

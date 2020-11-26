@@ -1,30 +1,35 @@
 import mysql from 'mysql';
 import config from '../config';
+import { _queryAsync } from '../db/db';
 
-export const seedDb = (): Promise<mysql.MysqlError | void> => {
+export const seedDb = async () => {
   const db = mysql.createConnection(config.mysql.connectionOptions);
 
-  return new Promise((resolve, reject) => {
-    db.query('CREATE DATABASE IF NOT EXISTS slack', err => {
-      if (err) {
-        reject(err);
-      }
+  await _queryAsync<any>(db, 'CREATE DATABASE IF NOT EXISTS slack');
 
-      db.query('USE slack');
+  await _queryAsync<any>(db, 'USE slack');
 
-      db.query(`CREATE TABLE IF NOT EXISTS user (
+  await _queryAsync<any>(
+    db,
+    `CREATE TABLE IF NOT EXISTS user (
         id INT(8) PRIMARY KEY AUTO_INCREMENT,
         name TINYTEXT NOT NULL,
         pass TINYTEXT NOT NULL
-      )`);
+      )`
+  );
 
-      db.query(`CREATE TABLE IF NOT EXISTS blacklist (
+  await _queryAsync<any>(
+    db,
+    `CREATE TABLE IF NOT EXISTS blacklist (
         id INT(8) PRIMARY KEY AUTO_INCREMENT,
         token TEXT NOT NULL,
         insertDate BIGINT NOT NULL
-      )`);
+      )`
+  );
 
-      db.query(`CREATE TABLE IF NOT EXISTS message (
+  await _queryAsync<any>(
+    db,
+    `CREATE TABLE IF NOT EXISTS message (
         id INT(12) AUTO_INCREMENT,
         contentType VARCHAR(6) NOT NULL,
         time DATETIME NOT NULL,
@@ -34,18 +39,24 @@ export const seedDb = (): Promise<mysql.MysqlError | void> => {
         channelId INT(8) NOT NULL,
         PRIMARY KEY (id),
         FOREIGN KEY (userId) REFERENCES user(id),
-        FOREIGN KEY (channelId) REFERENCES channel(id),
-      )`);
+        FOREIGN KEY (channelId) REFERENCES channel(id)
+      )`
+  );
 
-      db.query(`CREATE TABLE IF NOT EXISTS server (
+  await _queryAsync<any>(
+    db,
+    `CREATE TABLE IF NOT EXISTS server (
         id INT(8) AUTO_INCREMENT,
         name TINYTEXT NOT NULL,
         ownerUserId INT(8) NOT NULL,
         PRIMARY KEY (id),
         FOREIGN KEY (ownerUserId) REFERENCES user(id)
-      )`);
+      )`
+  );
 
-      db.query(`CREATE TABLE IF NOT EXISTS channel (
+  await _queryAsync<any>(
+    db,
+    `CREATE TABLE IF NOT EXISTS channel (
         id INT(8) AUTO_INCREMENT,
         serverId INT(8),
         name TINYTEXT NOT NULL,
@@ -56,24 +67,33 @@ export const seedDb = (): Promise<mysql.MysqlError | void> => {
         description TEXT DEFAULT NULL,
         PRIMARY KEY (id),
         FOREIGN KEY (serverId) REFERENCES server(id)
-      )`);
+      )`
+  );
 
-      db.query(`CREATE TABLE IF NOT EXISTS link_server_user (
+  await _queryAsync<any>(
+    db,
+    `CREATE TABLE IF NOT EXISTS link_server_user (
         serverId INT(8) NOT NULL,
         userId INT(8) NOT NULL,
         FOREIGN KEY (serverId) REFERENCES server(id),
         FOREIGN KEY (userId) REFERENCES user(id)
-      )`);
+      )`
+  );
 
-      db.query(`CREATE TABLE IF NOT EXISTS link_channel_user (
+  await _queryAsync<any>(
+    db,
+    `CREATE TABLE IF NOT EXISTS link_channel_user (
         channelId INT(8) NOT NULL,
         userId INT(8) NOT NULL,
         lastAccess DATETIME DEFAULT NULL,
         FOREIGN KEY (channelId) REFERENCES channel(id),
         FOREIGN KEY (userId) REFERENCES user(id)
-      )`);
+      )`
+  );
 
-      db.query(`CREATE TABLE IF NOT EXISTS client (
+  await _queryAsync<any>(
+    db,
+    `CREATE TABLE IF NOT EXISTS client (
         socketId VARCHAR(20) PRIMARY KEY NOT NULL,
         userId INT(8) DEFAULT NULL,
         serverId INT(8) DEFAULT NULL,
@@ -81,10 +101,8 @@ export const seedDb = (): Promise<mysql.MysqlError | void> => {
         FOREIGN KEY (userId) REFERENCES user(id),
         FOREIGN KEY (channelId) REFERENCES channel(id),
         FOREIGN KEY (serverId) REFERENCES server(id)
-      )`);
+      )`
+  );
 
-      console.log('seeded db');
-      resolve();
-    });
-  });
+  console.log('seeded db');
 };

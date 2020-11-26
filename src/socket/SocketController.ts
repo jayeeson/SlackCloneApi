@@ -14,7 +14,7 @@ export class SocketController {
 
   onConnect = async (socket: Socket) => {
     console.log('a user connected');
-    console.log(socket.request);
+    // console.log(socket.request);
 
     this.activeSockets.add(socket);
     const token = await verifySocketToken(socket.request);

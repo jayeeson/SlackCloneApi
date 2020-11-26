@@ -27,7 +27,7 @@ const verifyJwtAsync = async (token: string) => {
 };
 
 export const getCookieFromRequest = (req: any) => {
-  console.log(req);
+  // console.log(req);
   return 'cookie';
 };
 
