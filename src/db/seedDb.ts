@@ -105,4 +105,5 @@ export const seedDb = async () => {
   );
 
   console.log('seeded db');
+  db.end();
 };
