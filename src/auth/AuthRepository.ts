@@ -19,4 +19,12 @@ export class AuthRepository {
   blacklistToken = async (token: string) => {
     return await this.dao.run('INSERT INTO blacklist (token, insertDate) VALUES (?,?)', [token, new Date().getTime()]);
   };
+
+  isTokenBlacklisted = async (token: string) => {
+    const dbToken = await this.dao.getOne('SELECT * FROM blacklist WHERE token = (?)', [token]);
+    if (dbToken) {
+      return true;
+    }
+    return false;
+  };
 }

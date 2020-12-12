@@ -2,7 +2,7 @@ import { hashPassword } from '../helpers/bcrypt';
 import bcrypt from 'bcrypt';
 import { AuthRepository } from './AuthRepository';
 import { CustomError } from '../CustomError';
-import { createToken } from '../helpers/jwt';
+import { createToken, verifyJwtAsync } from '../helpers/jwt';
 import { ErrorTypes, JwtPayload } from '../types';
 
 export class AuthService {
@@ -44,4 +44,17 @@ export class AuthService {
     const token = createToken(data);
     return token;
   }
+
+  status = async (token: string) => {
+    const valid = await verifyJwtAsync(token);
+    if (!valid) {
+      return null;
+    }
+    const blacklisted = await this.repository.isTokenBlacklisted(token);
+    if (blacklisted) {
+      return null;
+    }
+    const user = await this.repository.getByUser(valid.username);
+    return user;
+  };
 }

@@ -14,7 +14,7 @@ export const attachTokenToResponse = (token: string, res: Response) => {
   res.cookie(config.jwt.cookie.name, token, { ...config.jwt.cookie.options, expires: tokenIssueLength });
 };
 
-const verifyJwtAsync = async (token: string) => {
+export const verifyJwtAsync = async (token: string) => {
   const decoded = await new Promise<JwtDecoded>((resolve, reject) => {
     jwt.verify(token, config.jwt.tokenSecret, (err: jwt.VerifyErrors | null, decoded: any) => {
       if (err) {
@@ -27,6 +27,7 @@ const verifyJwtAsync = async (token: string) => {
 };
 
 export const getCookieFromRequest = (req: any) => {
+  ///\todo: implement. dependent on frontend
   // console.log(req);
   return 'cookie';
 };

@@ -47,4 +47,18 @@ export class AuthController {
 
     res.send('Logged out');
   };
+
+  status = async (req: Request, res: Response) => {
+    const token = req.cookies[config.jwt.cookie.name];
+
+    if (token) {
+      const signedInUsername = await this.service.status(token);
+      if (signedInUsername) {
+        return res.send(signedInUsername);
+      }
+    }
+
+    res.clearCookie(config.jwt.cookie.name);
+    return res.send('logged out');
+  };
 }

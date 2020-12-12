@@ -15,5 +15,6 @@ const router = express.Router();
 router.post('/login', asyncWrapper(authController.login));
 router.post('/register', asyncWrapper(authController.register));
 router.get('/logout', asyncWrapper(authController.logout));
+router.get('/status', asyncWrapper(authController.status));
 
 export default router;
