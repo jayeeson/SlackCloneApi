@@ -52,9 +52,9 @@ export class AuthController {
     const token = req.cookies[config.jwt.cookie.name];
 
     if (token) {
-      const signedInUsername = await this.service.status(token);
-      if (signedInUsername) {
-        return res.send(signedInUsername);
+      const signedInToken = await this.service.status(token);
+      if (signedInToken) {
+        return res.send(signedInToken.name);
       }
     }
 
