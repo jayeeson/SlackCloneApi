@@ -13,7 +13,8 @@ export const seedDb = async () => {
     db,
     `CREATE TABLE IF NOT EXISTS user (
         id INT(8) PRIMARY KEY AUTO_INCREMENT,
-        name TINYTEXT NOT NULL,
+        username TINYTEXT NOT NULL,
+        displayName TINYTEXT NOT NULL,
         pass TINYTEXT NOT NULL
       )`
   );

@@ -24,7 +24,7 @@ export class SocketRepository {
     this.dao.run(
       `INSERT INTO server (name, ownerUserId) VALUES (
       ?,
-      (SELECT id FROM user WHERE name = ?)`,
+      (SELECT id FROM user WHERE username = ?)`,
       [serverName, username]
     );
   };
@@ -39,7 +39,7 @@ export class SocketRepository {
     this.dao.run(
       `INSERT INTO link_channel_user (channelId, userId) VALUES(
         ?,
-        (SELECT id FROM user WHERE name = ?)
+        (SELECT id FROM user WHERE username = ?)
       )`,
       [channel.insertId, username]
     );
@@ -49,7 +49,7 @@ export class SocketRepository {
     this.dao.run(
       `INSERT INTO link_channel_user (channelId, userId) VALUES (
         ?,
-        (SELECT id FROM user WHERE name = ?)
+        (SELECT id FROM user WHERE username = ?)
       );`,
       [channelId, username]
     );
@@ -90,7 +90,7 @@ export class SocketRepository {
           m.content,
           m.originalMsgId,
           u.id AS userId,
-          u.name AS username
+          u.username AS username
         FROM message m
           LEFT JOIN user u
             ON m.userId = u.id 

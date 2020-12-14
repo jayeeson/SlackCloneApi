@@ -54,7 +54,7 @@ export class AuthController {
     if (token) {
       const signedInToken = await this.service.status(token);
       if (signedInToken) {
-        return res.send(signedInToken.name);
+        return res.send(signedInToken.username);
       }
     }
 

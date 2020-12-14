@@ -12,7 +12,8 @@ export interface SlackClient {
 
 export interface User {
   id: number;
-  name: string;
+  username: string;
+  displayName: string;
   pass: string;
 }
 

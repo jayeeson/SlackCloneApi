@@ -9,11 +9,15 @@ export class AuthRepository {
   }
 
   getByUser = async (username: string) => {
-    return await this.dao.getOne<User>('SELECT * FROM user WHERE name = (?)', [username]);
+    return await this.dao.getOne<User>('SELECT * FROM user WHERE username = (?)', [username]);
   };
 
   createUser = async (username: string, hash: string) => {
-    return await this.dao.run('INSERT INTO user (name, pass) VALUES (?,?)', [username, hash]);
+    return await this.dao.run('INSERT INTO user (username, pass, displayName) VALUES (?,?,?)', [
+      username,
+      hash,
+      username,
+    ]);
   };
 
   blacklistToken = async (token: string) => {
