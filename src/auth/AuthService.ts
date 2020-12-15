@@ -12,7 +12,7 @@ export class AuthService {
     this.repository = repository;
   }
 
-  validatePassword = async (username: string, password: string) => {
+  login = async (username: string, password: string) => {
     const user = await this.repository.getByUser(username);
     if (!user) {
       throw new CustomError(401, 'user not found', ErrorTypes.VALIDATION);
@@ -45,7 +45,10 @@ export class AuthService {
     return token;
   }
 
-  status = async (token: string) => {
+  isValidToken = async (token: string) => {
+    if (!token) {
+      return null;
+    }
     const valid = await verifyJwtAsync(token);
     if (!valid) {
       return null;
@@ -54,7 +57,7 @@ export class AuthService {
     if (blacklisted) {
       return null;
     }
-    const user = await this.repository.getByUser(valid.username);
-    return user;
+    const userRow = await this.repository.getByUser(valid.username);
+    return userRow;
   };
 }

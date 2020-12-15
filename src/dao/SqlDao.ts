@@ -12,7 +12,7 @@ export class SqlDao implements IDao {
   }
 
   getOne = <T>(query: string, params?: any[]): Promise<T | undefined> => {
-    return new Promise<T>((resolve, reject) => {
+    return new Promise<T | undefined>((resolve, reject) => {
       try {
         this.db.query(query, params, (err: mysql.MysqlError | null, results: T[]) => {
           if (err) {

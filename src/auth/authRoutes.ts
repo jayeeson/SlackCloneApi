@@ -7,7 +7,7 @@ import { AuthService } from './AuthService';
 
 const dao = new SqlDao();
 const authRepository = new AuthRepository(dao);
-const authService = new AuthService(authRepository);
+export const authService = new AuthService(authRepository);
 const authController = new AuthController(authService);
 
 const router = express.Router();

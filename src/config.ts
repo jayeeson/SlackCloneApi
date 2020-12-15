@@ -54,6 +54,14 @@ const cookie = {
   options: cookieOptions,
 };
 
+const chat = {
+  default: {
+    channel: {
+      description: 'This is the description for this channel',
+    },
+  },
+};
+
 export default {
   // cors,
   port,
@@ -65,4 +73,5 @@ export default {
     options: jwtOptions as typeof jwtOptions,
     cookie,
   },
+  chat,
 };

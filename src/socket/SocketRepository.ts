@@ -1,5 +1,5 @@
 import { IDao } from '../dao/IDao';
-import { SlackMessage, SlackChannel } from '../types';
+import { ChatMessage, ChatChannel } from '../types';
 
 export class SocketRepository {
   dao: IDao;
@@ -57,7 +57,7 @@ export class SocketRepository {
 
   getChannelsForServer = async (serverId: number) => {
     ///\todo: maybe limit columns returned depending on if its accessible: private channel
-    return await this.dao.getAll<SlackChannel>('SELECT * FROM channel WHERE serverId = ?', [serverId]);
+    return await this.dao.getAll<ChatChannel>('SELECT * FROM channel WHERE serverId = ?', [serverId]);
   };
 
   // // list of active users
@@ -82,7 +82,7 @@ export class SocketRepository {
   };
 
   getLastestMessagesForChannel = async (channelId: number, numberOfMessages: number) => {
-    return await this.dao.getAll<SlackMessage>(
+    return await this.dao.getAll<ChatMessage>(
       ` SELECT m.id,
           m.channelId,
           m.contentType,

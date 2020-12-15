@@ -3,7 +3,7 @@ export enum DeploymentType {
   DEV,
 }
 
-export interface SlackClient {
+export interface ChatClient {
   socketId: string;
   userId: number;
   serverId: number;
@@ -17,7 +17,7 @@ export interface User {
   pass: string;
 }
 
-export interface SlackMessage {
+export interface ChatMessage {
   id: number;
   contentType: MessageContentType;
   userId: number;
@@ -26,20 +26,20 @@ export interface SlackMessage {
   originalMsgId?: number;
 }
 
-export interface SlackServer {
+export interface ChatServer {
   id: number;
   name: string;
   ownerUserId: number;
 }
 
-export interface SlackChannel {
+export interface ChatChannel {
   id: number;
   name: string;
   serverId: number;
-  private: boolean;
+  isPrivate: boolean;
   topic: string;
-  welcomeMsg: string;
   description: string;
+  autoAddNewMembers: boolean;
 }
 
 export interface LinkChannelUser {
@@ -73,4 +73,15 @@ export enum ErrorTypes {
   DB = 'DB',
   INIT = 'INIT',
   CONFIG = 'CONFIG',
+  BAD_REQUEST = 'BAD_REQUEST',
+}
+
+export interface CreateChannelParams {
+  channelName: string;
+  serverId: string;
+  description?: string;
+  isPrivate?: boolean;
+  addEveryone?: boolean;
+  addTheseUsers?: string[];
+  autoAddNewMembers?: boolean;
 }

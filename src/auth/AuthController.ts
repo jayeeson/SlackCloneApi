@@ -18,7 +18,7 @@ export class AuthController {
       throw new CustomError(400, 'Missing username / password', ErrorTypes.VALIDATION);
     }
 
-    const loggedInUsername = await this.service.validatePassword(username, password);
+    const loggedInUsername = await this.service.login(username, password);
 
     const token = this.service.generateToken(username);
     attachTokenToResponse(token, res);
@@ -52,7 +52,7 @@ export class AuthController {
     const token = req.cookies[config.jwt.cookie.name];
 
     if (token) {
-      const signedInToken = await this.service.status(token);
+      const signedInToken = await this.service.isValidToken(token);
       if (signedInToken) {
         return res.send(signedInToken.username);
       }

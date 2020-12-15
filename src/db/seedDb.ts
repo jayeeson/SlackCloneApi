@@ -15,7 +15,8 @@ export const seedDb = async () => {
         id INT(8) PRIMARY KEY AUTO_INCREMENT,
         username TINYTEXT NOT NULL,
         displayName TINYTEXT NOT NULL,
-        pass TINYTEXT NOT NULL
+        pass TINYTEXT NOT NULL,
+        UNIQUE (username)
       )`
   );
 
@@ -61,11 +62,10 @@ export const seedDb = async () => {
         id INT(8) AUTO_INCREMENT,
         serverId INT(8),
         name TINYTEXT NOT NULL,
-        content TEXT DEFAULT NULL,
-        private BOOLEAN DEFAULT NULL,
+        isPrivate BOOLEAN NOT NULL,
         topic TEXT DEFAULT NULL,
-        welcomeMsg TEXT DEFAULT NULL,
         description TEXT DEFAULT NULL,
+        autoAddNewMembers BOOLEAN NOT NULL,
         PRIMARY KEY (id),
         FOREIGN KEY (serverId) REFERENCES server(id)
       )`
@@ -76,8 +76,9 @@ export const seedDb = async () => {
     `CREATE TABLE IF NOT EXISTS link_server_user (
         serverId INT(8) NOT NULL,
         userId INT(8) NOT NULL,
-        FOREIGN KEY (serverId) REFERENCES server(id),
-        FOREIGN KEY (userId) REFERENCES user(id)
+        FOREIGN KEY (serverId) REFERENCES server(id) ON DELETE CASCADE,
+        FOREIGN KEY (userId) REFERENCES user(id) ON DELETE CASCADE,
+        UNIQUE(serverId, userId)
       )`
   );
 
@@ -87,8 +88,9 @@ export const seedDb = async () => {
         channelId INT(8) NOT NULL,
         userId INT(8) NOT NULL,
         lastAccess DATETIME DEFAULT NULL,
-        FOREIGN KEY (channelId) REFERENCES channel(id),
-        FOREIGN KEY (userId) REFERENCES user(id)
+        FOREIGN KEY (channelId) REFERENCES channel(id) ON DELETE CASCADE,
+        FOREIGN KEY (userId) REFERENCES user(id) ON DELETE CASCADE,
+        UNIQUE(channelId, userId)
       )`
   );
 
