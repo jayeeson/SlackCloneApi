@@ -13,8 +13,8 @@ export const seedDb = async () => {
     db,
     `CREATE TABLE IF NOT EXISTS user (
         id INT(8) PRIMARY KEY AUTO_INCREMENT,
-        username TINYTEXT NOT NULL,
-        displayName TINYTEXT NOT NULL,
+        username VARCHAR(24) NOT NULL,
+        displayName VARCHAR(24) NOT NULL,
         pass TINYTEXT NOT NULL,
         UNIQUE (username)
       )`
@@ -25,23 +25,7 @@ export const seedDb = async () => {
     `CREATE TABLE IF NOT EXISTS blacklist (
         id INT(8) PRIMARY KEY AUTO_INCREMENT,
         token TEXT NOT NULL,
-        insertDate BIGINT NOT NULL
-      )`
-  );
-
-  await _queryAsync<any>(
-    db,
-    `CREATE TABLE IF NOT EXISTS message (
-        id INT(12) AUTO_INCREMENT,
-        contentType VARCHAR(6) NOT NULL,
-        time DATETIME NOT NULL,
-        content TEXT DEFAULT NULL,
-        originalMsgId INT(12) DEFAULT NULL,
-        userId INT(8) DEFAULT NULL,
-        channelId INT(8) NOT NULL,
-        PRIMARY KEY (id),
-        FOREIGN KEY (userId) REFERENCES user(id),
-        FOREIGN KEY (channelId) REFERENCES channel(id)
+        insertTime BIGINT NOT NULL
       )`
   );
 
@@ -91,6 +75,22 @@ export const seedDb = async () => {
         FOREIGN KEY (channelId) REFERENCES channel(id) ON DELETE CASCADE,
         FOREIGN KEY (userId) REFERENCES user(id) ON DELETE CASCADE,
         UNIQUE(channelId, userId)
+      )`
+  );
+
+  await _queryAsync<any>(
+    db,
+    `CREATE TABLE IF NOT EXISTS message (
+        id INT(12) AUTO_INCREMENT,
+        contentType VARCHAR(6) NOT NULL,
+        time BIGINT NOT NULL,
+        content TEXT DEFAULT NULL,
+        originalMsgId INT(12) DEFAULT NULL,
+        userId INT(8) DEFAULT NULL,
+        channelId INT(8) NOT NULL,
+        PRIMARY KEY (id),
+        FOREIGN KEY (userId) REFERENCES user(id),
+        FOREIGN KEY (channelId) REFERENCES channel(id)
       )`
   );
 

@@ -10,6 +10,14 @@ export class ChatService {
     this.repository = repository;
   }
 
+  getStartupData = async (token: string) => {
+    const { username } = await verifyJwtAsync(token);
+    const servers = await this.repository.getUserServers(username);
+    const channels = await this.repository.getUserChannels(username);
+    const user = await this.repository.getUser(username);
+    return { servers, channels, user };
+  };
+
   createServer = async (token: string, serverName: string | undefined) => {
     const { username } = await verifyJwtAsync(token);
     const server = await this.repository.createServer(username, serverName);

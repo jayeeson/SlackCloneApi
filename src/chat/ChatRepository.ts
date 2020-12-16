@@ -1,6 +1,6 @@
 import config from '../config';
 import { IDao } from '../dao/IDao';
-import { CreateChannelParams } from '../types';
+import { ChatChannel, ChatServer, CreateChannelParams, User } from '../types';
 
 export class ChatRepository {
   private dao: IDao;
@@ -9,10 +9,36 @@ export class ChatRepository {
     this.dao = dao;
   }
 
+  getUserServers = async (username: string) => {
+    return await this.dao.getAll<ChatServer>(
+      `SELECT s.id, s.name, s.ownerUserId FROM server s
+        LEFT JOIN link_server_user lsu ON s.id = lsu.serverId
+        LEFT JOIN user u ON lsu.userId = u.id
+        WHERE u.username = ?`,
+      [username]
+    );
+  };
+
+  getUserChannels = async (username: string) => {
+    return await this.dao.getAll<ChatChannel>(
+      `SELECT c.id, c.name, c.serverId, c.isPrivate, c.topic, c.autoAddNewMembers, c.description FROM channel c
+        LEFT JOIN link_channel_user lcu ON c.id = lcu.channelId
+        LEFT JOIN user u ON lcu.userId = u.id
+        WHERE u.username = ?`,
+      [username]
+    );
+  };
+
+  getUser = async (username: string) => {
+    return await this.dao.getOne<Omit<User, 'pass'>>(
+      'SELECT id, username, displayName FROM user WHERE username = (?)',
+      [username]
+    );
+  };
+
   createServer = async (username: string, inputServerName?: string) => {
     const usernameWithFirstLetterCapitalized = username.slice(0, 1).toLocaleUpperCase() + username.slice(1);
     const useServerName = inputServerName ?? `${usernameWithFirstLetterCapitalized}'s Server`;
-    console.log('server name inputted', inputServerName, 'useServerName', useServerName);
     const newServer = await this.dao.run(
       `INSERT INTO server (name, ownerUserId) VALUES(
         ?,
@@ -40,6 +66,7 @@ export class ChatRepository {
       await this.dao.run(
         `INSERT INTO link_channel_user (channelId, userId) SELECT ?, u.id FROM user u 
           INNER JOIN link_server_user lsu ON u.id = lsu.userId
+
           WHERE lsu.serverId = ?`,
         [newChannel.insertId, params.serverId]
       );
@@ -69,7 +96,6 @@ export class ChatRepository {
     ) AND serverId = ?`,
       [username, serverId]
     );
-    console.log(server);
     return Boolean(server);
   };
 }

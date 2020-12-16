@@ -38,8 +38,8 @@ export interface ChatChannel {
   serverId: number;
   isPrivate: boolean;
   topic: string;
-  description: string;
   autoAddNewMembers: boolean;
+  description?: string;
 }
 
 export interface LinkChannelUser {
