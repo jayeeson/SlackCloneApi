@@ -20,8 +20,8 @@ export class ChatController {
   createServer = async (req: Request, res: Response) => {
     const token = req.cookies[config.jwt.cookie.name];
     const { serverName } = req.body;
-    const newServerName = await this.service.createServer(token, serverName);
-    res.send(newServerName);
+    const server = await this.service.createServer(token, serverName);
+    res.json(server);
   };
 
   createChannel = async (req: Request, res: Response) => {

@@ -39,7 +39,7 @@ export class ChatRepository {
   createServer = async (username: string, inputServerName?: string) => {
     const usernameWithFirstLetterCapitalized = username.slice(0, 1).toLocaleUpperCase() + username.slice(1);
     const useServerName = inputServerName ?? `${usernameWithFirstLetterCapitalized}'s Server`;
-    const newServer = await this.dao.run(
+    const newServerResponse = await this.dao.run(
       `INSERT INTO server (name, ownerUserId) VALUES(
         ?,
         (SELECT id FROM user WHERE user.username = ? )
@@ -51,9 +51,12 @@ export class ChatRepository {
         ?,
         (SELECT id FROM user WHERE user.username = ? )
       )`,
-      [newServer.insertId, username]
+      [newServerResponse.insertId, username]
     );
-    return useServerName;
+    const createdServer = await this.dao.getOne<ChatServer>('SELECT * FROM server WHERE id = ?', [
+      newServerResponse.insertId,
+    ]);
+    return createdServer;
   };
 
   createChannel = async (username: string, params: CreateChannelParams) => {
