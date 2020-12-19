@@ -53,4 +53,23 @@ export class ChatController {
     });
     res.send(newChannelName);
   };
+
+  getOldestMessages = async (req: Request, res: Response) => {
+    const { quantity, offset } = req.body;
+    if (!quantity) {
+      throw new CustomError(400, 'missing key "quantity"', ErrorTypes.BAD_REQUEST);
+    }
+    const data = await this.service.repository.getOldestMessages(quantity, offset);
+    console.log(data);
+    res.send(data);
+  };
+
+  getNewestMessages = async (req: Request, res: Response) => {
+    const { quantity, offset } = req.body;
+    if (!quantity) {
+      throw new CustomError(400, 'missing key "quantity"', ErrorTypes.BAD_REQUEST);
+    }
+    const data = await this.service.repository.getNewestMessages(quantity, offset);
+    res.json(data);
+  };
 }

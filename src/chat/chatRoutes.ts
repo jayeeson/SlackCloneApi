@@ -15,5 +15,7 @@ const router = express.Router();
 router.get('/getStartupData', asyncWrapper(chatController.getStartupData));
 router.post('/createServer', asyncWrapper(chatController.createServer));
 router.post('/createChannel', asyncWrapper(chatController.createChannel));
+router.post('/getOldestMessages', asyncWrapper(chatController.getOldestMessages));
+router.post('/getNewestMessages', asyncWrapper(chatController.getNewestMessages));
 
 export default router;

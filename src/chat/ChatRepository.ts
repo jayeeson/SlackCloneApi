@@ -1,6 +1,6 @@
 import config from '../config';
 import { IDao } from '../dao/IDao';
-import { ChatChannel, ChatServer, CreateChannelParams, User } from '../types';
+import { ChatChannel, ChatMessage, ChatServer, CreateChannelParams, User } from '../types';
 
 export class ChatRepository {
   private dao: IDao;
@@ -59,11 +59,21 @@ export class ChatRepository {
     return createdServer;
   };
 
+  getChannelById = async (id: number) => {
+    return await this.dao.getOne('SELECT * FROM channel WHERE id = ?', [id]);
+  };
+
   createChannel = async (username: string, params: CreateChannelParams) => {
     const { channelName, serverId, description, isPrivate, addEveryone, addTheseUsers, autoAddNewMembers } = params;
     const newChannel = await this.dao.run(
       'INSERT INTO channel (name, serverId, description, isPrivate, autoAddNewMembers) VALUES(?, ?, ?, ?, ?)',
-      [channelName, serverId, description ?? config.chat.default.channel.description, isPrivate, autoAddNewMembers]
+      [
+        channelName,
+        serverId,
+        description ?? config.chat.default.channel.description,
+        isPrivate ?? false,
+        autoAddNewMembers ?? false,
+      ]
     );
     if (addEveryone) {
       await this.dao.run(
@@ -89,7 +99,7 @@ export class ChatRepository {
         [newChannel.insertId, username]
       );
     }
-    return params.channelName;
+    return this.getChannelById(newChannel.insertId);
   };
 
   isUserInServer = async (username: string, serverId: string) => {
@@ -100,5 +110,33 @@ export class ChatRepository {
       [username, serverId]
     );
     return Boolean(server);
+  };
+
+  createMessage = async (username: string, channelId: number, content: string) => {
+    const now = new Date().getTime();
+    const message = await this.dao.run(
+      `INSERT INTO message (contentType, channelId, content, time, userId) SELECT ?, ?, ?, id, FROM user WHERE name = ?`,
+      [1, channelId, content, now, username]
+    );
+    return message;
+  };
+
+  ///\todo: implement more sophisticated message getters
+  // getMessagesByDate = async ({}: { quantity: number; time: number; showBeforeTime?: boolean; showAfterTime?: boolean }) => {
+
+  private getOldestOrNewestMessages = async (quantity: number, offset?: number, getNewestInstead?: boolean) => {
+    const message = await this.dao.getAll<ChatMessage>(
+      `SELECT * FROM message ORDER BY time ${getNewestInstead ? 'DESC' : 'ASC'} LIMIT ?, ?`,
+      [offset ?? 0, quantity]
+    );
+    return message;
+  };
+
+  getOldestMessages = async (quantity: number, offset?: number) => {
+    return this.getOldestOrNewestMessages(quantity, offset, false);
+  };
+
+  getNewestMessages = async (quantity: number, offset?: number) => {
+    return this.getOldestOrNewestMessages(quantity, offset, true);
   };
 }

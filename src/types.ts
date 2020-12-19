@@ -19,11 +19,12 @@ export interface User {
 
 export interface ChatMessage {
   id: number;
-  contentType: MessageContentType;
+  contentType: number;
   userId: number;
   time: string;
   content?: string;
   originalMsgId?: number;
+  channelId: number;
 }
 
 export interface ChatServer {
@@ -53,10 +54,10 @@ export interface LinkServerChannel {
   channelId: number;
 }
 
-export enum MessageContentType {
-  STRING = 'STRING',
-  QUOTE = 'QUOTE',
-  THREAD = 'THREAD',
+export enum MessageContentTypeKey {
+  MESSAGE = 1,
+  QUOTE = 2,
+  THREAD = 4,
 }
 
 export interface JwtPayload {
