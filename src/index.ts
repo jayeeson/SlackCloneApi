@@ -13,7 +13,6 @@ import { asyncWrapper } from './utils/wrappers';
   seedDb();
 
   const app = express();
-  app.set('port', config.port);
   app.use(bodyParser.json());
   app.use(cookieParser());
   app.use(handleCustomErrors);
@@ -22,7 +21,7 @@ import { asyncWrapper } from './utils/wrappers';
 
   const httpServer = launchSocketServer(app);
 
-  httpServer.listen(app.get('port'), () => {
-    console.log('App started on port', app.get('port'));
+  httpServer.listen(config.port, () => {
+    console.log('App started on port', config.port);
   });
 })();

@@ -51,7 +51,7 @@ export const seedDb = async () => {
         description TEXT DEFAULT NULL,
         autoAddNewMembers BOOLEAN NOT NULL,
         PRIMARY KEY (id),
-        FOREIGN KEY (serverId) REFERENCES server(id)
+        FOREIGN KEY (serverId) REFERENCES server(id) ON DELETE CASCADE
       )`
   );
 

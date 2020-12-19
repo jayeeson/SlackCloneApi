@@ -59,6 +59,13 @@ export class ChatRepository {
     return createdServer;
   };
 
+  deleteServer = async (serverName: string, username: string) => {
+    return await this.dao.run(
+      'DELETE FROM server WHERE name = ? AND ownerUserId = (SELECT id FROM user WHERE username = ?)',
+      [serverName, username]
+    );
+  };
+
   getChannelById = async (id: number) => {
     return await this.dao.getOne('SELECT * FROM channel WHERE id = ?', [id]);
   };
@@ -138,5 +145,29 @@ export class ChatRepository {
 
   getNewestMessages = async (quantity: number, offset?: number) => {
     return this.getOldestOrNewestMessages(quantity, offset, true);
+  };
+
+  getLastestMessagesForChannel = async (channelId: number, numberOfMessages: number) => {
+    return await this.dao.getAll<ChatMessage>(
+      ` SELECT m.id,
+          m.channelId,
+          m.contentType,
+          m.time,
+          m.content,
+          m.originalMsgId,
+          u.id AS userId,
+          u.username AS username
+        FROM message m
+          LEFT JOIN user u
+            ON m.userId = u.id 
+        WHERE m.channelId = ?
+        ORDER BY m.time DESC LIMIT ?;`,
+      [channelId, numberOfMessages]
+    );
+  };
+
+  // // list of active users
+  getLoggedInUsersForServer = async (serverId: number) => {
+    return await this.dao.getAll<{ userId: number }>('SELECT userId FROM client WHERE serverId = ?', [serverId]);
   };
 }

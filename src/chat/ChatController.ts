@@ -60,7 +60,6 @@ export class ChatController {
       throw new CustomError(400, 'missing key "quantity"', ErrorTypes.BAD_REQUEST);
     }
     const data = await this.service.repository.getOldestMessages(quantity, offset);
-    console.log(data);
     res.send(data);
   };
 

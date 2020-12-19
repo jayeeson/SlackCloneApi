@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { IncomingMessage } from 'http';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import { JwtDecoded, JwtPayload } from '../types';
@@ -26,10 +27,15 @@ export const verifyJwtAsync = async (token: string) => {
   return decoded;
 };
 
-export const getCookieFromRequest = (req: any) => {
-  ///\todo: implement. dependent on frontend
-  // console.log(req);
-  return 'cookie';
+export const getCookieFromRequest = (req: IncomingMessage) => {
+  const tokenPrefix = config.jwt.cookie.name + '=';
+  const cookies = req.headers['cookie']?.split('; ');
+  const cookie = cookies?.find(cookie => cookie.startsWith(tokenPrefix));
+  if (cookie && cookie.length < tokenPrefix.length) {
+    return;
+  }
+  console.log(cookie?.slice(tokenPrefix.length, cookie?.length));
+  return cookie?.slice(tokenPrefix.length, cookie?.length);
 };
 
 export const verifySocketToken = async (req: any): Promise<JwtDecoded | undefined> => {
