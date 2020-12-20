@@ -82,13 +82,14 @@ export const seedDb = async () => {
     db,
     `CREATE TABLE IF NOT EXISTS message (
         id INT(12) AUTO_INCREMENT,
-        contentType VARCHAR(6) NOT NULL,
+        contentType INT(1) NOT NULL,
         time BIGINT NOT NULL,
         content TEXT DEFAULT NULL,
-        quoteMsgId INT(12) DEFAULT NULL,
-        quoteChannelName INT(12) DEFAULT NULL,
         userId INT(8) DEFAULT NULL,
         channelId INT(8) NOT NULL,
+        deleted BOOLEAN DEFAULT 0,
+        quoteMsgId INT(12) DEFAULT NULL,
+        threadParentMessageId INT(12) DEFAULT NULL,
         PRIMARY KEY (id),
         FOREIGN KEY (userId) REFERENCES user(id),
         FOREIGN KEY (channelId) REFERENCES channel(id)

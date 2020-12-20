@@ -19,12 +19,33 @@ export interface User {
 
 export interface ChatMessage {
   id: number;
-  contentType: number;
   userId: number;
+  contentType: MessageContentType;
+  contentId: number;
   time: string;
-  content?: string;
-  originalMsgId?: number;
   channelId: number;
+  deleted: boolean;
+}
+
+export interface ChatMessageContent {
+  id: number;
+  text: string;
+  messageId: number;
+}
+
+export interface ChatThreadParent {
+  id: number;
+  messageId: number;
+  lastReplyDate: number;
+}
+
+export interface ChatThreadReply extends ChatMessageContent {
+  threadId: number;
+}
+
+export interface ChatQuoteMessage extends ChatMessageContent {
+  quotedMessageId: number;
+  quotedMessageType: MessageContentType;
 }
 
 export interface ChatServer {
@@ -58,6 +79,13 @@ export enum MessageContentTypeKey {
   MESSAGE = 1,
   QUOTE = 2,
   THREAD = 4,
+}
+
+export enum MessageContentType {
+  MESSAGE = MessageContentTypeKey.MESSAGE,
+  QUOTE = MessageContentTypeKey.QUOTE,
+  THREAD_PARENT = MessageContentTypeKey.THREAD,
+  THREAD_REPLY = MessageContentTypeKey.THREAD + MessageContentTypeKey.MESSAGE,
 }
 
 export interface JwtPayload {

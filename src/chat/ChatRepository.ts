@@ -1,6 +1,7 @@
+import e from 'express';
 import config from '../config';
 import { IDao } from '../dao/IDao';
-import { ChatChannel, ChatMessage, ChatServer, CreateChannelParams, User } from '../types';
+import { ChatChannel, ChatMessage, ChatServer, CreateChannelParams, MessageContentType, User } from '../types';
 
 export class ChatRepository {
   private dao: IDao;
@@ -109,21 +110,54 @@ export class ChatRepository {
     return this.getChannelById(newChannel.insertId);
   };
 
-  isUserInServer = async (username: string, serverId: string) => {
-    const server = await this.dao.getOne(
-      `SELECT (serverId) FROM link_server_user WHERE userId = (
-      SELECT id FROM user WHERE username = ?
-    ) AND serverId = ?`,
-      [username, serverId]
-    );
-    return Boolean(server);
+  isUserInServer = async ({
+    username,
+    serverId,
+    channelId,
+  }: {
+    username: string;
+    serverId?: string;
+    channelId?: number;
+  }) => {
+    if (serverId) {
+      const server = await this.dao.getOne(
+        `SELECT lsu.serverId FROM link_server_user lsu 
+          LEFT JOIN user u ON lsu.userId = u.id 
+          WHERE u.username = ? 
+            AND lsu.serverId = ?`,
+        [username, serverId]
+      );
+      return Boolean(server);
+    } else if (channelId) {
+      const server = await this.dao.getOne(
+        `SELECT lsu.serverId FROM link_server_user lsu 
+        LEFT JOIN user u ON lsu.userId = u.id
+        LEFT JOIN channel c ON c.serverId = lsu.serverId
+        WHERE u.username = ? 
+          AND c.id = ?`,
+        [username, channelId]
+      );
+      return Boolean(server);
+    }
   };
 
-  createMessage = async (username: string, channelId: number, content: string) => {
+  isUserInChannel = async ({ username, channelId }: { username: string; channelId?: number }) => {
+    const channel = await this.dao.getOne(
+      `SELECT lcu.channelId FROM link_channel_user lcu 
+        LEFT JOIN user u ON lcu.userId = u.id
+        WHERE u.username = ? 
+          AND lcu.channelId = ?`,
+      [username, channelId]
+    );
+    return Boolean(channel);
+  };
+
+  sendMessage = async ({ username, text, channelId }: { username: string; channelId: number; text: string }) => {
+    const contentType = MessageContentType.MESSAGE;
     const now = new Date().getTime();
     const message = await this.dao.run(
-      `INSERT INTO message (contentType, channelId, content, time, userId) SELECT ?, ?, ?, id, FROM user WHERE name = ?`,
-      [1, channelId, content, now, username]
+      `INSERT INTO message (contentType, channelId, content, time, userId) SELECT ?, ?, ?, ?, id FROM user WHERE username = ?`,
+      [contentType, channelId, text, now, username]
     );
     return message;
   };

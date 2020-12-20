@@ -17,5 +17,6 @@ router.post('/createServer', asyncWrapper(chatController.createServer));
 router.post('/createChannel', asyncWrapper(chatController.createChannel));
 router.post('/getOldestMessages', asyncWrapper(chatController.getOldestMessages));
 router.post('/getNewestMessages', asyncWrapper(chatController.getNewestMessages));
+router.post('/sendMessage', asyncWrapper(chatController.sendMessage));
 
 export default router;

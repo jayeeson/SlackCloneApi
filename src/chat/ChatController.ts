@@ -71,4 +71,18 @@ export class ChatController {
     const data = await this.service.repository.getNewestMessages(quantity, offset);
     res.json(data);
   };
+
+  sendMessage = async (req: Request, res: Response) => {
+    const token = req.cookies[config.jwt.cookie.name];
+    const { text, channelId } = req.body;
+    if (!text) {
+      throw new CustomError(400, 'missing key "text"', ErrorTypes.BAD_REQUEST);
+    }
+    if (!channelId) {
+      throw new CustomError(400, 'missing key "channelId"', ErrorTypes.BAD_REQUEST);
+    }
+    await this.service.sendMessage({ text, channelId, token });
+    // todo: emit message sent event on socket
+    res.send('message sent');
+  };
 }
