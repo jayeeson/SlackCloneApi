@@ -9,19 +9,18 @@ import config from './config';
 import { launchSocketServer } from './helpers/socketio';
 import * as mw from './middleware/validators';
 import { asyncWrapper } from './utils/wrappers';
-(async () => {
-  seedDb();
 
-  const app = express();
-  app.use(bodyParser.json());
-  app.use(cookieParser());
-  app.use(handleCustomErrors);
-  app.use(authRoutes);
-  app.use(asyncWrapper(mw.requireToken), chatRoutes);
+seedDb();
 
-  const httpServer = launchSocketServer(app);
+export const app = express();
+app.use(bodyParser.json());
+app.use(cookieParser());
+app.use(handleCustomErrors);
+app.use(authRoutes);
+app.use(asyncWrapper(mw.requireToken), chatRoutes);
 
-  httpServer.listen(config.port, () => {
-    console.log('App started on port', config.port);
-  });
-})();
+const httpServer = launchSocketServer();
+
+httpServer.listen(config.port, () => {
+  console.log('App started on port', config.port);
+});

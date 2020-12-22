@@ -14,15 +14,14 @@ export class SocketController {
 
   onConnect = async (socket: Socket) => {
     console.log('a user connected');
-    // console.log(socket.request);
 
     this.activeSockets.add(socket);
     const token = await verifySocketToken(socket.request);
     this.service.addClient(socket.id, token);
-    this.createSocketHandlers(socket);
+    this.createEventHandlers(socket);
   };
 
-  private createSocketHandlers = (socket: Socket) => {
+  private createEventHandlers = (socket: Socket) => {
     // LEAVE_CHANNEL
     // DELETE_CHANNEL
     // INVITE_TO_CHANNEL
@@ -34,10 +33,13 @@ export class SocketController {
 
     // CREATE_SERVER : need: 1. valid login token 2. server name
 
-    socket.on('disconnecting', () => {
+    socket.on('disconnecting', async () => {
       this.activeSockets.remove(socket.id);
+      const client = await this.service.getClient(socket.id);
       this.service.removeClient(socket.id);
-      socket.rooms.forEach(room => socket.to(room).emit('user_disconnected', socket.id));
+      if (client) {
+        socket.rooms.forEach(room => socket.to(room).emit('user disconnected', client.userId));
+      }
     });
   };
 }

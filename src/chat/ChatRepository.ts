@@ -152,12 +152,21 @@ export class ChatRepository {
     return Boolean(channel);
   };
 
-  sendMessage = async ({ username, text, channelId }: { username: string; channelId: number; text: string }) => {
+  sendMessage = async ({
+    username,
+    text,
+    channelId,
+    timestamp,
+  }: {
+    username: string;
+    channelId: number;
+    text: string;
+    timestamp: number;
+  }) => {
     const contentType = MessageContentType.MESSAGE;
-    const now = new Date().getTime();
     const message = await this.dao.run(
       `INSERT INTO message (contentType, channelId, content, time, userId) SELECT ?, ?, ?, ?, id FROM user WHERE username = ?`,
-      [contentType, channelId, text, now, username]
+      [contentType, channelId, text, timestamp, username]
     );
     return message;
   };

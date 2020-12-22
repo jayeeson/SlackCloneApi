@@ -44,7 +44,8 @@ export class ChatService {
     if (!userIsInChannel) {
       throw new CustomError(401, 'user is not part of that channel', ErrorTypes.VALIDATION);
     }
-    const serverName = await this.repository.sendMessage({ username, channelId, text });
-    return serverName;
+    const timestamp = new Date().getTime();
+    await this.repository.sendMessage({ username, channelId, text, timestamp });
+    return { timestamp, username };
   };
 }

@@ -114,3 +114,7 @@ export interface CreateChannelParams {
   addTheseUsers?: string[];
   autoAddNewMembers?: boolean;
 }
+
+export enum SocketEvent {
+  NEW_MESSAGE = 'NEW_MESSAGE',
+}

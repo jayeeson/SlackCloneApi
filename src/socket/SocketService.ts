@@ -16,4 +16,8 @@ export class SocketService {
   removeClient = (socketId: string) => {
     this.repository.removeClient(socketId);
   };
+
+  getClient = async (id: string) => {
+    return await this.repository.getClient(id);
+  };
 }

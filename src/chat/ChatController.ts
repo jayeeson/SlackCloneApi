@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import { ChatService } from './ChatService';
 import config from '../config';
 import { CustomError } from '../CustomError';
-import { CreateChannelParams, ErrorTypes } from '../types';
+import { CreateChannelParams, ErrorTypes, SocketEvent } from '../types';
+import { io } from '../helpers/socketio';
 
 export class ChatController {
   service: ChatService;
@@ -74,15 +75,19 @@ export class ChatController {
 
   sendMessage = async (req: Request, res: Response) => {
     const token = req.cookies[config.jwt.cookie.name];
-    const { text, channelId } = req.body;
+    const { text, channelId, serverId } = req.body;
     if (!text) {
       throw new CustomError(400, 'missing key "text"', ErrorTypes.BAD_REQUEST);
     }
     if (!channelId) {
       throw new CustomError(400, 'missing key "channelId"', ErrorTypes.BAD_REQUEST);
     }
-    await this.service.sendMessage({ text, channelId, token });
+    if (!serverId) {
+      throw new CustomError(400, 'missing key "serverId"', ErrorTypes.BAD_REQUEST);
+    }
+    const { timestamp, username } = await this.service.sendMessage({ text, channelId, token });
     // todo: emit message sent event on socket
+    io.emit(SocketEvent.NEW_MESSAGE, { content: text, serverId, timestamp, username });
     res.send('message sent');
   };
 }

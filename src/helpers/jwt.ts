@@ -34,7 +34,6 @@ export const getCookieFromRequest = (req: IncomingMessage) => {
   if (cookie && cookie.length < tokenPrefix.length) {
     return;
   }
-  console.log(cookie?.slice(tokenPrefix.length, cookie?.length));
   return cookie?.slice(tokenPrefix.length, cookie?.length);
 };
 

@@ -1,21 +1,20 @@
 import http from 'http';
 import socketio, { Socket } from 'socket.io';
-import { Express } from 'express';
 import { SqlDao } from '../dao/SqlDao';
 import { SocketRepository } from '../socket/SocketRepository';
 import { SocketService } from '../socket/SocketService';
 import { SocketController } from '../socket/SocketController';
-export enum SocketEvent {}
+import { app } from '../index';
 
 const dao = new SqlDao();
 const socketRepository = new SocketRepository(dao);
 const socketService = new SocketService(socketRepository);
 const socketController = new SocketController(socketService);
 
-export const launchSocketServer = (app: Express) => {
-  const server = http.createServer(app);
-  const io = new socketio.Server(server);
+const server = http.createServer(app);
+export const io = new socketio.Server(server);
 
+export const launchSocketServer = () => {
   io.on('connect', (socket: Socket) => {
     socketController.onConnect(socket);
   });

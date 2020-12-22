@@ -1,4 +1,5 @@
 import { IDao } from '../dao/IDao';
+import { ChatClient } from '../types';
 
 export class SocketRepository {
   dao: IDao;
@@ -14,7 +15,11 @@ export class SocketRepository {
     ]);
   };
 
-  removeClient = (socketId: string) => {
-    this.dao.run('DELETE FROM client WHERE socketId = ?', [socketId]);
+  removeClient = async (socketId: string) => {
+    return await this.dao.run('DELETE FROM client WHERE socketId = ?', [socketId]);
+  };
+
+  getClient = async (socketId: string) => {
+    return await this.dao.getOne<ChatClient>('SELECT * FROM client WHERE socketId = ?', [socketId]);
   };
 }
