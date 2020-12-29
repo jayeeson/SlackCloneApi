@@ -25,7 +25,7 @@ export const seedDb = async () => {
     `CREATE TABLE IF NOT EXISTS blacklist (
         id INT(8) PRIMARY KEY AUTO_INCREMENT,
         token TEXT NOT NULL,
-        insertTime BIGINT NOT NULL
+        insertDate BIGINT NOT NULL
       )`
   );
 
