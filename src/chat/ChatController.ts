@@ -3,7 +3,7 @@ import { ChatService } from './ChatService';
 import config from '../config';
 import { CustomError } from '../CustomError';
 import { CreateChannelParams, ErrorTypes, SocketEvent } from '../types';
-import { io } from '../helpers/socketio';
+import { io } from '../index';
 
 export class ChatController {
   service: ChatService;
