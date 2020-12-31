@@ -1,5 +1,5 @@
 import { IDao } from '../dao/IDao';
-import { User } from '../types';
+import { Blacklist, User } from '../types';
 
 export class AuthRepository {
   private dao: IDao;
@@ -25,8 +25,8 @@ export class AuthRepository {
   };
 
   isTokenBlacklisted = async (token: string) => {
-    const dbToken = await this.dao.getOne('SELECT * FROM blacklist WHERE token = (?)', [token]);
-    if (dbToken) {
+    const blacklistedToken = await this.dao.getOne<Blacklist>('SELECT * FROM blacklist WHERE token = (?)', [token]);
+    if (blacklistedToken) {
       return true;
     }
     return false;

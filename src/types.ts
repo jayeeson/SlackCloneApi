@@ -107,7 +107,7 @@ export enum ErrorTypes {
 
 export interface CreateChannelParams {
   channelName: string;
-  serverId: string;
+  serverId: number;
   description?: string;
   isPrivate?: boolean;
   addEveryone?: boolean;
@@ -117,4 +117,10 @@ export interface CreateChannelParams {
 
 export enum SocketEvent {
   NEW_MESSAGE = 'NEW_MESSAGE',
+}
+
+export interface Blacklist {
+  id: number;
+  token: string;
+  insertDate: number;
 }

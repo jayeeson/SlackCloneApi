@@ -1,4 +1,3 @@
-import e from 'express';
 import config from '../config';
 import { IDao } from '../dao/IDao';
 import { ChatChannel, ChatMessage, ChatServer, CreateChannelParams, MessageContentType, User } from '../types';
@@ -57,7 +56,23 @@ export class ChatRepository {
     const createdServer = await this.dao.getOne<ChatServer>('SELECT * FROM server WHERE id = ?', [
       newServerResponse.insertId,
     ]);
-    return createdServer;
+
+    // create two default channels
+    if (createdServer) {
+      const generalChannel = await this.createChannel(username, {
+        channelName: 'General',
+        serverId: createdServer.id,
+        description: 'This is the General channel where anything goes.',
+        autoAddNewMembers: true,
+      });
+      const randomChannel = await this.createChannel(username, {
+        channelName: 'Random',
+        serverId: createdServer.id,
+        description: 'This is the Random channel, home of off-topic discussions.',
+        autoAddNewMembers: true,
+      });
+      return { server: createdServer, channels: [generalChannel, randomChannel] };
+    }
   };
 
   deleteServer = async (serverName: string, username: string) => {
@@ -68,7 +83,7 @@ export class ChatRepository {
   };
 
   getChannelById = async (id: number) => {
-    return await this.dao.getOne('SELECT * FROM channel WHERE id = ?', [id]);
+    return await this.dao.getOne<ChatChannel>('SELECT * FROM channel WHERE id = ?', [id]);
   };
 
   createChannel = async (username: string, params: CreateChannelParams) => {
@@ -116,11 +131,11 @@ export class ChatRepository {
     channelId,
   }: {
     username: string;
-    serverId?: string;
+    serverId?: number;
     channelId?: number;
   }) => {
     if (serverId) {
-      const server = await this.dao.getOne(
+      const server = await this.dao.getOne<{ serverId: number }>(
         `SELECT lsu.serverId FROM link_server_user lsu 
           LEFT JOIN user u ON lsu.userId = u.id 
           WHERE u.username = ? 
@@ -129,7 +144,7 @@ export class ChatRepository {
       );
       return Boolean(server);
     } else if (channelId) {
-      const server = await this.dao.getOne(
+      const server = await this.dao.getOne<{ serverId: number }>(
         `SELECT lsu.serverId FROM link_server_user lsu 
         LEFT JOIN user u ON lsu.userId = u.id
         LEFT JOIN channel c ON c.serverId = lsu.serverId
@@ -142,7 +157,7 @@ export class ChatRepository {
   };
 
   isUserInChannel = async ({ username, channelId }: { username: string; channelId?: number }) => {
-    const channel = await this.dao.getOne(
+    const channel = await this.dao.getOne<{ channelId: number }>(
       `SELECT lcu.channelId FROM link_channel_user lcu 
         LEFT JOIN user u ON lcu.userId = u.id
         WHERE u.username = ? 

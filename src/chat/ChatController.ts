@@ -21,8 +21,8 @@ export class ChatController {
   createServer = async (req: Request, res: Response) => {
     const token = req.cookies[config.jwt.cookie.name];
     const { serverName } = req.body;
-    const server = await this.service.createServer(token, serverName);
-    res.json(server);
+    const serverAndDefaultChannels = await this.service.createServer(token, serverName);
+    res.json(serverAndDefaultChannels);
   };
 
   createChannel = async (req: Request, res: Response) => {
@@ -43,7 +43,7 @@ export class ChatController {
       throw new CustomError(400, 'Missing server id', ErrorTypes.BAD_REQUEST);
     }
 
-    const newChannelName = await this.service.createChannel(token, {
+    const newChannel = await this.service.createChannel(token, {
       channelName,
       serverId,
       description,
@@ -52,7 +52,7 @@ export class ChatController {
       addTheseUsers,
       autoAddNewMembers,
     });
-    res.send(newChannelName);
+    res.send(newChannel);
   };
 
   getOldestMessages = async (req: Request, res: Response) => {

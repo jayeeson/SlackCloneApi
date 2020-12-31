@@ -18,7 +18,6 @@ export class SocketController {
 
     this.activeSockets.add(socket);
     const token = await verifySocketToken(socket.request);
-    console.log('token verified, contents username:', token?.username);
     this.service.addClient(socket.id, token);
     this.createEventHandlers(socket);
   };
@@ -36,7 +35,6 @@ export class SocketController {
     // CREATE_SERVER : need: 1. valid login token 2. server name
 
     socket.on('disconnecting', async () => {
-      console.log('disconnecting');
       this.activeSockets.remove(socket.id);
       const client = await this.service.getClient(socket.id);
       this.service.removeClient(socket.id);
@@ -46,12 +44,10 @@ export class SocketController {
     });
 
     socket.on('login', (username: string) => {
-      console.log('login event, username:', username);
       this.service.repository.clientLogin(socket.id, username);
     });
 
     socket.on('logout', () => {
-      console.log('logout event');
       this.service.repository.clientLogout(socket.id);
     });
   };
