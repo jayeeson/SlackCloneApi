@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { ChatService } from '../chat/ChatService';
 import config from '../config';
 import { CustomError } from '../CustomError';
 import { attachTokenToResponse } from '../helpers/jwt';
@@ -7,9 +8,11 @@ import { AuthService } from './AuthService';
 
 export class AuthController {
   service: AuthService;
+  chatService: ChatService;
 
-  constructor(service: AuthService) {
+  constructor(service: AuthService, chatService: ChatService) {
     this.service = service;
+    this.chatService = chatService;
   }
 
   login = async (req: Request, res: Response) => {
@@ -33,6 +36,7 @@ export class AuthController {
     }
 
     const registeredUsername = await this.service.register(username, password);
+    await this.chatService.repository.addUserToServer(username, config.defaultServer.id);
     const token = this.service.generateToken(username);
     attachTokenToResponse(token, res);
     res.send(registeredUsername);

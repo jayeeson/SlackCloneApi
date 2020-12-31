@@ -62,6 +62,10 @@ const chat = {
   },
 };
 
+const defaultServer = {
+  id: 1,
+};
+
 export default {
   // cors,
   port,
@@ -74,4 +78,5 @@ export default {
     cookie,
   },
   chat,
+  defaultServer,
 };

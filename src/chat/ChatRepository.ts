@@ -213,4 +213,20 @@ export class ChatRepository {
   getLoggedInUsersForServer = async (serverId: number) => {
     return await this.dao.getAll<{ userId: number }>('SELECT userId FROM client WHERE serverId = ?', [serverId]);
   };
+
+  addUserToServer = async (user: string | number, server: number) => {
+    const userPart = typeof user === 'string' ? '(SELECT id FROM user WHERE user.username = ? )' : '?';
+    const addToServer = await this.dao.run(
+      `INSERT INTO link_server_user (serverId, userId) VALUES(
+      ?,
+      ${userPart}
+    )`,
+      [server, user]
+    );
+    await this.dao.run(
+      `INSERT INTO link_channel_user (channelId, userId) SELECT c.id, ${userPart} FROM channel c INNER JOIN server s ON s.id = c.serverId WHERE c.autoAddNewMembers = 1 AND s.id = ?`,
+      [user, server]
+    );
+    return addToServer;
+  };
 }

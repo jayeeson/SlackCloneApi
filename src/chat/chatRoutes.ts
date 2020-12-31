@@ -7,7 +7,7 @@ import { ChatService } from './ChatService';
 
 const dao = new SqlDao();
 const chatRepository = new ChatRepository(dao);
-const chatService = new ChatService(chatRepository);
+export const chatService = new ChatService(chatRepository);
 const chatController = new ChatController(chatService);
 
 const router = express.Router();
