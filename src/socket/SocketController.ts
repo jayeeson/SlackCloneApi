@@ -43,12 +43,19 @@ export class SocketController {
       }
     });
 
-    socket.on('login', (username: string) => {
+    socket.on('login', ({ username }: { username: string }) => {
       this.service.repository.clientLogin(socket.id, username);
     });
 
     socket.on('logout', () => {
       this.service.repository.clientLogout(socket.id);
+    });
+
+    socket.on('setActiveServer', ({ newServer, oldServer }: { newServer: number; oldServer: number }) => {
+      socket.join(`server#${newServer}`);
+      if (oldServer) {
+        socket.leave(`server#${oldServer}`);
+      }
     });
   };
 }
