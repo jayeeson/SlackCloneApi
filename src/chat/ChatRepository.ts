@@ -215,18 +215,20 @@ export class ChatRepository {
   };
 
   addUserToServer = async (user: string | number, server: number) => {
-    const userPart = typeof user === 'string' ? '(SELECT id FROM user WHERE user.username = ? )' : '?';
-    const addToServer = await this.dao.run(
-      `INSERT INTO link_server_user (serverId, userId) VALUES(
-      ?,
-      ${userPart}
-    )`,
-      [server, user]
-    );
-    await this.dao.run(
-      `INSERT INTO link_channel_user (channelId, userId) SELECT c.id, ${userPart} FROM channel c INNER JOIN server s ON s.id = c.serverId WHERE c.autoAddNewMembers = 1 AND s.id = ?`,
-      [user, server]
-    );
-    return addToServer;
+    const userId =
+      typeof user === 'number'
+        ? user
+        : (await this.dao.getOne<{ id: number }>('SELECT id FROM user WHERE user.username = ?', [user]))?.id;
+    if (userId) {
+      const addToServer = await this.dao.run(`INSERT INTO link_server_user (userId, serverId) VALUES(?,?)`, [
+        userId,
+        server,
+      ]);
+      await this.dao.run(
+        `INSERT INTO link_channel_user (channelId, userId) SELECT c.id, ? FROM channel c INNER JOIN server s ON s.id = c.serverId WHERE c.autoAddNewMembers = 1 AND s.id = ?`,
+        [userId, server]
+      );
+      return addToServer;
+    }
   };
 }

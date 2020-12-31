@@ -20,4 +20,8 @@ export class SocketService {
   getClient = async (id: string) => {
     return await this.repository.getClient(id);
   };
+
+  clearClientTable = async () => {
+    return await this.repository.clearClientTable();
+  };
 }
