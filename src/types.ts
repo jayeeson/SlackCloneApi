@@ -99,6 +99,7 @@ export interface JwtDecoded extends JwtPayload {
 
 export enum ErrorTypes {
   VALIDATION = 'VALIDATION',
+  AUTH = 'AUTHENTICATION',
   DB = 'DB',
   INIT = 'INIT',
   CONFIG = 'CONFIG',
