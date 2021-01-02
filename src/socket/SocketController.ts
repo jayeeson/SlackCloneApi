@@ -3,7 +3,7 @@ import events from 'events';
 import { ActiveSockets } from './ActiveSockets';
 import { SocketService } from './SocketService';
 import { getCookieFromRequest, verifySocketToken } from '../helpers/jwt';
-import { ChatChannel, ChatServer, CreateChannelParams, ErrorTypes, SocketEvent, User } from '../types';
+import { ChatChannel, ChatServer, CreateChannelParams, ErrorTypes, User } from '../types';
 import { CustomError } from '../CustomError';
 import { io } from '../index';
 
@@ -59,8 +59,15 @@ export class SocketController {
 
     socket.on('setActiveServer', ({ newServer, oldServer }: { newServer: number; oldServer: number }) => {
       socket.join(`server#${newServer}`);
-      if (oldServer) {
+      if (oldServer && oldServer !== newServer) {
         socket.leave(`server#${oldServer}`);
+      }
+    });
+
+    socket.on('setActiveChannel', ({ newChannel, oldChannel }: { newChannel: number; oldChannel: number }) => {
+      socket.join(`channel#${newChannel}`);
+      if (oldChannel && oldChannel !== newChannel) {
+        socket.leave(`channel#${oldChannel}`);
       }
     });
 
@@ -74,7 +81,6 @@ export class SocketController {
       if (!data.user) {
         throw new CustomError(401, 'user does not exist', ErrorTypes.AUTH);
       }
-      console.log(data);
       callback(
         data as {
           servers: ChatServer[];
@@ -151,19 +157,8 @@ export class SocketController {
       }
     );
     socket.on(
-      'message',
-      async (
-        {
-          text,
-          channelId,
-          serverId,
-        }: {
-          text: string;
-          channelId: number;
-          serverId: number;
-        },
-        callback: (status: string) => void
-      ) => {
+      'sendMessage',
+      async ({ text, channelId, serverId }: { text: string; channelId: number; serverId: number }) => {
         const token = getCookieFromRequest(socket.request);
         if (!token) {
           throw new CustomError(401, 'not signed in', ErrorTypes.AUTH);
@@ -179,9 +174,12 @@ export class SocketController {
         }
         const { timestamp, username } = await this.service.sendMessage({ text, channelId, token });
         // todo: emit message sent event on socket to the server and the channel ... TBD
-        io.emit(SocketEvent.NEW_MESSAGE, { content: text, serverId, timestamp, username });
-        callback('OK');
-        console.log('end');
+        ///\todo: have these constants represent needed data
+        console.log('message received', text, 'emitting to ...', `server#${serverId}`, 'and', `channel#${channelId}`);
+        console.log('rooms', socket.rooms);
+        io.to(`server#${serverId}`)
+          .to(`channel#${channelId}`)
+          .emit('newmessage', { content: text, serverId, timestamp, username });
       }
     );
 

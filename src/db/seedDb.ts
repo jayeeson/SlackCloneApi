@@ -83,7 +83,7 @@ export const seedDb = async () => {
     `CREATE TABLE IF NOT EXISTS message (
         id INT(12) AUTO_INCREMENT,
         contentType INT(1) NOT NULL,
-        time BIGINT NOT NULL,
+        timestamp BIGINT NOT NULL,
         content TEXT DEFAULT NULL,
         userId INT(8) DEFAULT NULL,
         channelId INT(8) NOT NULL,

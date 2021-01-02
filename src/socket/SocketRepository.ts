@@ -233,7 +233,7 @@ export class SocketRepository {
   }) => {
     const contentType = MessageContentType.MESSAGE;
     const message = await this.dao.run(
-      `INSERT INTO message (contentType, channelId, content, time, userId) SELECT ?, ?, ?, ?, id FROM user WHERE username = ?`,
+      `INSERT INTO message (contentType, channelId, content, timestamp, userId) SELECT ?, ?, ?, ?, id FROM user WHERE username = ?`,
       [contentType, channelId, text, timestamp, username]
     );
     return message;
@@ -244,7 +244,7 @@ export class SocketRepository {
 
   private getOldestOrNewestMessages = async (quantity: number, offset?: number, getNewestInstead?: boolean) => {
     const message = await this.dao.getAll<ChatMessage>(
-      `SELECT * FROM message ORDER BY time ${getNewestInstead ? 'DESC' : 'ASC'} LIMIT ?, ?`,
+      `SELECT * FROM message ORDER BY timestamp ${getNewestInstead ? 'DESC' : 'ASC'} LIMIT ?, ?`,
       [offset ?? 0, quantity]
     );
     return message;
@@ -259,20 +259,19 @@ export class SocketRepository {
   };
 
   getLastestMessagesForChannel = async (channelId: number, numberOfMessages: number) => {
-    return await this.dao.getAll<ChatMessage>(
+    return await this.dao.getAll<ChatMessage & { username: string }>(
       ` SELECT m.id,
           m.channelId,
           m.contentType,
-          m.time,
+          m.timestamp,
           m.content,
           m.originalMsgId,
           u.id AS userId,
-          u.username AS username
         FROM message m
           LEFT JOIN user u
             ON m.userId = u.id 
         WHERE m.channelId = ?
-        ORDER BY m.time DESC LIMIT ?;`,
+        ORDER BY m.timestamp DESC LIMIT ?;`,
       [channelId, numberOfMessages]
     );
   };
