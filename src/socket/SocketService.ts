@@ -52,7 +52,7 @@ export class SocketService {
   };
 
   sendMessage = async ({ text, channelId, token }: { text: string; channelId: number; token: string }) => {
-    const { username } = await verifyJwtAsync(token);
+    const { username, userId } = await verifyJwtAsync(token);
     const userIsInServer = await this.repository.isUserInServer({ username, channelId });
     if (!userIsInServer) {
       throw new CustomError(401, 'user is not part of that server', ErrorTypes.VALIDATION);
@@ -62,7 +62,7 @@ export class SocketService {
       throw new CustomError(401, 'user is not part of that channel', ErrorTypes.VALIDATION);
     }
     const timestamp = new Date().getTime();
-    await this.repository.sendMessage({ username, channelId, text, timestamp });
-    return { timestamp, username };
+    const messageOkPacket = await this.repository.sendMessage({ username, channelId, text, timestamp });
+    return { timestamp, username, userId, id: messageOkPacket.insertId };
   };
 }

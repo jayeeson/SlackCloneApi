@@ -21,7 +21,7 @@ export class AuthService {
     if (!passMatch) {
       throw new CustomError(401, 'Incorrect password', ErrorTypes.VALIDATION);
     }
-    return username;
+    return { username, userId: user.id };
   };
 
   register = async (username: string, password: string) => {
@@ -31,16 +31,16 @@ export class AuthService {
     }
 
     const hash = await hashPassword(password);
-    await this.repository.createUser(username, hash);
-    return username;
+    const { insertId } = await this.repository.createUser(username, hash);
+    return { username, userId: insertId };
   };
 
   logout = async (token: string) => {
     await this.repository.blacklistToken(token);
   };
 
-  generateToken(username: string) {
-    const data: JwtPayload = { username };
+  generateToken(username: string, userId: number) {
+    const data: JwtPayload = { username, userId };
     const token = createToken(data);
     return token;
   }

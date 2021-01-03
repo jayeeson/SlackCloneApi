@@ -3,7 +3,7 @@ import events from 'events';
 import { ActiveSockets } from './ActiveSockets';
 import { SocketService } from './SocketService';
 import { getCookieFromRequest, verifySocketToken } from '../helpers/jwt';
-import { ChatChannel, ChatServer, CreateChannelParams, ErrorTypes, User } from '../types';
+import { ChatChannel, ChatMessagePacket, ChatServer, CreateChannelParams, ErrorTypes, User } from '../types';
 import { CustomError } from '../CustomError';
 import { io } from '../index';
 
@@ -172,14 +172,13 @@ export class SocketController {
         if (!serverId) {
           throw new CustomError(400, 'missing key "serverId"', ErrorTypes.BAD_REQUEST);
         }
-        const { timestamp, username } = await this.service.sendMessage({ text, channelId, token });
+        const { timestamp, userId, id } = await this.service.sendMessage({ text, channelId, token });
         // todo: emit message sent event on socket to the server and the channel ... TBD
         ///\todo: have these constants represent needed data
         console.log('message received', text, 'emitting to ...', `server#${serverId}`, 'and', `channel#${channelId}`);
         console.log('rooms', socket.rooms);
-        io.to(`server#${serverId}`)
-          .to(`channel#${channelId}`)
-          .emit('newmessage', { content: text, serverId, timestamp, username });
+        const message: ChatMessagePacket = { id, content: text, channelId, serverId, timestamp, userId };
+        io.to(`server#${serverId}`).to(`channel#${channelId}`).emit('newmessage', message);
       }
     );
 
