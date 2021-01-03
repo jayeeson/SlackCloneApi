@@ -180,7 +180,7 @@ export class SocketController {
       }
     );
     socket.on(
-      'sendMessage',
+      'message',
       async ({ text, channelId, serverId }: { text: string; channelId: number; serverId: number }) => {
         const token = getCookieFromRequest(socket.request);
         if (!token) {
@@ -197,7 +197,7 @@ export class SocketController {
         }
         const { timestamp, userId, id, displayName } = await this.service.sendMessage({ text, channelId, token });
         const message: ChatMessagePacket = { id, content: text, channelId, serverId, timestamp, userId, displayName };
-        io.to(`server#${serverId}`).to(`channel#${channelId}`).emit('newmessage', message);
+        io.to(`server#${serverId}`).to(`channel#${channelId}`).emit('message', message);
       }
     );
 
