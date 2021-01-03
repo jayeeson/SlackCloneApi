@@ -2,10 +2,10 @@ import { Response } from 'express';
 import { IncomingMessage } from 'http';
 import jwt from 'jsonwebtoken';
 import config from '../config';
-import { JwtDecoded, JwtPayload } from '../types';
+import { JwtDecoded, User } from '../types';
 import timespan from '../utils/timespan';
 
-export const createToken = (data: JwtPayload) => {
+export const createToken = (data: Omit<User, 'pass'>) => {
   const token = jwt.sign(data, config.jwt.tokenSecret, config.jwt.options);
   return token;
 };

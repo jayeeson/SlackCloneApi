@@ -44,11 +44,7 @@ export class AuthService {
     if (!user) {
       throw new CustomError(401, 'authentication error, user not found', ErrorTypes.AUTH);
     }
-    const tokenPayload = {
-      username,
-      userId: user.id,
-      displayName: user.displayName,
-    };
+    const tokenPayload = user as Omit<User, 'pass'>;
     const token = createToken(tokenPayload);
     return token;
   };

@@ -1,6 +1,6 @@
 import { CustomError } from '../CustomError';
 import { verifyJwtAsync } from '../helpers/jwt';
-import { CreateChannelParams, ErrorTypes, JwtDecoded } from '../types';
+import { CreateChannelParams, ErrorTypes, JwtDecoded, User } from '../types';
 import { SocketRepository } from './SocketRepository';
 
 export class SocketService {
@@ -28,11 +28,12 @@ export class SocketService {
   };
 
   getStartupData = async (token: string) => {
-    const { username } = await verifyJwtAsync(token);
-    const servers = await this.repository.getUserServers(username);
-    const channels = await this.repository.getUserChannels(username);
-    const user = await this.repository.getUser(username);
-    return { servers, channels, user };
+    const user = (await verifyJwtAsync(token)) as Pick<JwtDecoded, keyof Omit<User, 'pass'>>;
+    const servers = await this.repository.getUserServers(user.username);
+    const channels = await this.repository.getUserChannels(user.username);
+    const serverIds = servers.map(server => server.id);
+    const users = await this.repository.getUsersInServers(serverIds);
+    return { servers, channels, user, users };
   };
 
   createServer = async (token: string, serverName: string | undefined) => {
@@ -52,7 +53,7 @@ export class SocketService {
   };
 
   sendMessage = async ({ text, channelId, token }: { text: string; channelId: number; token: string }) => {
-    const { username, userId, displayName } = await verifyJwtAsync(token);
+    const { username, id: userId, displayName } = await verifyJwtAsync(token);
     const userIsInServer = await this.repository.isUserInServer({ username, channelId });
     if (!userIsInServer) {
       throw new CustomError(401, 'user is not part of that server', ErrorTypes.VALIDATION);

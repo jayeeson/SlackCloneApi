@@ -3,7 +3,7 @@ import events from 'events';
 import { ActiveSockets } from './ActiveSockets';
 import { SocketService } from './SocketService';
 import { getCookieFromRequest, verifySocketToken } from '../helpers/jwt';
-import { ChatChannel, ChatMessagePacket, ChatServer, CreateChannelParams, ErrorTypes, User } from '../types';
+import { ChatMessagePacket, CreateChannelParams, ErrorTypes } from '../types';
 import { CustomError } from '../CustomError';
 import { io } from '../index';
 
@@ -80,13 +80,7 @@ export class SocketController {
       if (!data.user) {
         throw new CustomError(401, 'user does not exist', ErrorTypes.AUTH);
       }
-      callback(
-        data as {
-          servers: ChatServer[];
-          channels: ChatChannel[];
-          user: Pick<User, 'username' | 'id' | 'displayName'>;
-        }
-      );
+      callback(data);
     });
     socket.on('createServer', async ({ serverName }: { serverName: string }, callback: (args: any) => void) => {
       const token = getCookieFromRequest(socket.request);

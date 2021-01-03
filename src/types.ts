@@ -100,13 +100,7 @@ export enum MessageContentType {
   THREAD_REPLY = MessageContentTypeKey.THREAD + MessageContentTypeKey.MESSAGE,
 }
 
-export interface JwtPayload {
-  username: string;
-  userId: number;
-  displayName: string;
-}
-
-export interface JwtDecoded extends JwtPayload {
+export interface JwtDecoded extends Omit<User, 'pass'> {
   iat: string;
   exp: string;
 }

@@ -83,6 +83,18 @@ export class SocketRepository {
     );
   };
 
+  getUsersInServers = async (servers: number[]): Promise<Pick<User, 'id' | 'username' | 'displayName'>[]> => {
+    if (!servers.length) {
+      return [];
+    }
+    return await this.dao.getAll<Omit<User, 'pass'>>(
+      `SELECT u.id, u.username, u.displayName FROM user u 
+      LEFT JOIN link_server_user lsu ON lsu.userId = u.id
+      WHERE lsu.serverId IN (?)`,
+      [servers]
+    );
+  };
+
   createServer = async (username: string, inputServerName?: string) => {
     const usernameWithFirstLetterCapitalized = username.slice(0, 1).toLocaleUpperCase() + username.slice(1);
     const useServerName = inputServerName ?? `${usernameWithFirstLetterCapitalized}'s Server`;
