@@ -34,6 +34,7 @@ export interface ChatMessagePacket {
   serverId: number;
   userId: number;
   timestamp: number;
+  displayName: string;
   // deleted: boolean;
   // contentType: MessageContentType;
 }
@@ -102,6 +103,7 @@ export enum MessageContentType {
 export interface JwtPayload {
   username: string;
   userId: number;
+  displayName: string;
 }
 
 export interface JwtDecoded extends JwtPayload {

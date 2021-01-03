@@ -188,8 +188,8 @@ export class SocketRepository {
     channelId?: number;
   }) => {
     if (serverId) {
-      const server = await this.dao.getOne<{ serverId: number }>(
-        `SELECT lsu.serverId FROM link_server_user lsu 
+      const server = await this.dao.getOne<{ serverId: number; username: string; displayName: string }>(
+        `SELECT lsu.serverId, u.username, u.displayName FROM link_server_user lsu 
           LEFT JOIN user u ON lsu.userId = u.id 
           WHERE u.username = ? 
             AND lsu.serverId = ?`,
@@ -198,7 +198,7 @@ export class SocketRepository {
       return Boolean(server);
     } else if (channelId) {
       const server = await this.dao.getOne<{ serverId: number }>(
-        `SELECT lsu.serverId FROM link_server_user lsu 
+        `SELECT lsu.serverId, u.username, u.displayName FROM link_server_user lsu 
         LEFT JOIN user u ON lsu.userId = u.id
         LEFT JOIN channel c ON c.serverId = lsu.serverId
         WHERE u.username = ? 
@@ -243,36 +243,46 @@ export class SocketRepository {
   // getMessagesByDate = async ({}: { quantity: number; time: number; showBeforeTime?: boolean; showAfterTime?: boolean }) => {
 
   private getOldestOrNewestMessages = async (quantity: number, offset?: number, getNewestInstead?: boolean) => {
-    const message = await this.dao.getAll<ChatMessage>(
-      `SELECT * FROM message ORDER BY timestamp ${getNewestInstead ? 'DESC' : 'ASC'} LIMIT ?, ?`,
+    console.log('about to get messages+');
+    const messages = await this.dao.getAll<ChatMessage & { displayName: string }>(
+      `SELECT m.id,
+      m.timestamp,
+      m.content,
+      m.channelId,
+      m.contentType,
+      u.id AS userId,
+      u.displayName
+      FROM message m LEFT JOIN user u ON m.userId = u.id
+      ORDER BY timestamp ${getNewestInstead ? 'DESC' : 'ASC'} LIMIT ?, ?`,
       [offset ?? 0, quantity]
     );
-    return message;
+    console.log(messages);
+    return messages;
   };
 
   getOldestMessages = async (quantity: number, offset?: number) => {
-    return this.getOldestOrNewestMessages(quantity, offset, false);
+    return this.getOldestOrNewestMessages(quantity, offset);
   };
 
   getNewestMessages = async (quantity: number, offset?: number) => {
     return this.getOldestOrNewestMessages(quantity, offset, true);
   };
 
-  getLastestMessagesForChannel = async (channelId: number, numberOfMessages: number) => {
-    return await this.dao.getAll<ChatMessage & { username: string }>(
-      ` SELECT m.id,
-          m.channelId,
-          m.contentType,
+  getLastestMessagesForChannel = async (channelId: number, numberOfMessages: number, offset?: number) => {
+    return await this.dao.getAll<ChatMessage & { username: string; displayName: string }>(
+      `SELECT m.id,
           m.timestamp,
           m.content,
-          m.originalMsgId,
+          m.channelId,
+          m.contentType,
           u.id AS userId,
+          u.displayName
         FROM message m
-          LEFT JOIN user u
-            ON m.userId = u.id 
+        LEFT JOIN user u
+          ON m.userId = u.id 
         WHERE m.channelId = ?
-        ORDER BY m.timestamp DESC LIMIT ?;`,
-      [channelId, numberOfMessages]
+          ORDER BY m.timestamp DESC LIMIT ?, ?;`,
+      [channelId, offset ?? 0, numberOfMessages]
     );
   };
 

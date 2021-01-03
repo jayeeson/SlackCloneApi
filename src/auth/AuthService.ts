@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { AuthRepository } from './AuthRepository';
 import { CustomError } from '../CustomError';
 import { createToken, verifyJwtAsync } from '../helpers/jwt';
-import { ErrorTypes, JwtPayload } from '../types';
+import { ErrorTypes, User } from '../types';
 
 export class AuthService {
   repository: AuthRepository;
@@ -21,7 +21,7 @@ export class AuthService {
     if (!passMatch) {
       throw new CustomError(401, 'Incorrect password', ErrorTypes.VALIDATION);
     }
-    return { username, userId: user.id };
+    return user as Omit<User, 'pass'>;
   };
 
   register = async (username: string, password: string) => {
@@ -39,11 +39,19 @@ export class AuthService {
     await this.repository.blacklistToken(token);
   };
 
-  generateToken(username: string, userId: number) {
-    const data: JwtPayload = { username, userId };
-    const token = createToken(data);
+  generateToken = async (username: string) => {
+    const user = await this.repository.getByUser(username);
+    if (!user) {
+      throw new CustomError(401, 'authentication error, user not found', ErrorTypes.AUTH);
+    }
+    const tokenPayload = {
+      username,
+      userId: user.id,
+      displayName: user.displayName,
+    };
+    const token = createToken(tokenPayload);
     return token;
-  }
+  };
 
   isValidToken = async (token: string) => {
     if (!token) {

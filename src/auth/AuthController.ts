@@ -21,9 +21,9 @@ export class AuthController {
       throw new CustomError(400, 'Missing username / password', ErrorTypes.VALIDATION);
     }
 
-    const { username: loggedInUsername, userId } = await this.service.login(username, password);
+    const { username: loggedInUsername } = await this.service.login(username, password);
 
-    const token = this.service.generateToken(loggedInUsername, userId);
+    const token = await this.service.generateToken(loggedInUsername);
     attachTokenToResponse(token, res);
 
     res.send(loggedInUsername);
@@ -35,9 +35,9 @@ export class AuthController {
       throw new CustomError(400, 'Missing username / password', ErrorTypes.VALIDATION);
     }
 
-    const { username: newUsername, userId } = await this.service.register(username, password);
+    const { username: newUsername } = await this.service.register(username, password);
     await this.socketService.repository.addUserToServer(username, config.defaultServer.id);
-    const token = this.service.generateToken(newUsername, userId);
+    const token = await this.service.generateToken(newUsername);
     attachTokenToResponse(token, res);
     res.send(newUsername);
   };

@@ -149,10 +149,33 @@ export class SocketController {
     socket.on(
       'getNewestMessages',
       async ({ quantity, offset }: { quantity: number; offset?: number }, callback: (args: any) => void) => {
+        console.log('got getnewesetmssagees event');
         if (!quantity) {
           throw new CustomError(400, 'missing key "quantity"', ErrorTypes.BAD_REQUEST);
         }
         const data = await this.service.repository.getNewestMessages(quantity, offset);
+        console.log(data);
+        callback(data);
+      }
+    );
+    socket.on(
+      'getLatestMessagesForChannel',
+      async (
+        { channelId, quantity, offset }: { channelId: number; quantity: number; offset?: number },
+        callback: (args: any) => void
+      ) => {
+        console.log('about to get messages');
+        if (!channelId) {
+          throw new CustomError(400, 'missing key "channelId"', ErrorTypes.BAD_REQUEST);
+        }
+        console.log('channelId ok /*  */');
+        if (!quantity) {
+          throw new CustomError(400, 'missing key "quantity"', ErrorTypes.BAD_REQUEST);
+        }
+        console.log('quantity key ok');
+        const data = await this.service.repository.getLastestMessagesForChannel(channelId, quantity, offset);
+        console.log('data');
+        console.log(data);
         callback(data);
       }
     );
@@ -172,18 +195,14 @@ export class SocketController {
         if (!serverId) {
           throw new CustomError(400, 'missing key "serverId"', ErrorTypes.BAD_REQUEST);
         }
-        const { timestamp, userId, id } = await this.service.sendMessage({ text, channelId, token });
-        // todo: emit message sent event on socket to the server and the channel ... TBD
-        ///\todo: have these constants represent needed data
-        console.log('message received', text, 'emitting to ...', `server#${serverId}`, 'and', `channel#${channelId}`);
-        console.log('rooms', socket.rooms);
-        const message: ChatMessagePacket = { id, content: text, channelId, serverId, timestamp, userId };
+        const { timestamp, userId, id, displayName } = await this.service.sendMessage({ text, channelId, token });
+        const message: ChatMessagePacket = { id, content: text, channelId, serverId, timestamp, userId, displayName };
         io.to(`server#${serverId}`).to(`channel#${channelId}`).emit('newmessage', message);
       }
     );
 
     socket.on('error', err => {
-      console.log(err);
+      console.log('error', err);
     });
   };
 }
