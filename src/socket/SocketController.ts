@@ -21,7 +21,6 @@ export class SocketController {
 
   onConnect = async (socket: Socket) => {
     console.log('a user connected');
-
     this.activeSockets.add(socket);
     const token = await verifySocketToken(socket.request);
     this.service.addClient(socket.id, token);
@@ -91,12 +90,10 @@ export class SocketController {
     });
     socket.on('createServer', async ({ serverName }: { serverName: string }, callback: (args: any) => void) => {
       const token = getCookieFromRequest(socket.request);
-      console.log(callback);
       if (!token) {
         throw new CustomError(401, 'not signed in', ErrorTypes.AUTH);
       }
       const serverAndDefaultChannels = await this.service.createServer(token, serverName);
-      console.log(serverAndDefaultChannels);
       callback(serverAndDefaultChannels);
     });
     socket.on(
@@ -149,12 +146,10 @@ export class SocketController {
     socket.on(
       'getNewestMessages',
       async ({ quantity, offset }: { quantity: number; offset?: number }, callback: (args: any) => void) => {
-        console.log('got getnewesetmssagees event');
         if (!quantity) {
           throw new CustomError(400, 'missing key "quantity"', ErrorTypes.BAD_REQUEST);
         }
         const data = await this.service.repository.getNewestMessages(quantity, offset);
-        console.log(data);
         callback(data);
       }
     );
@@ -164,18 +159,13 @@ export class SocketController {
         { channelId, quantity, offset }: { channelId: number; quantity: number; offset?: number },
         callback: (args: any) => void
       ) => {
-        console.log('about to get messages');
         if (!channelId) {
           throw new CustomError(400, 'missing key "channelId"', ErrorTypes.BAD_REQUEST);
         }
-        console.log('channelId ok /*  */');
         if (!quantity) {
           throw new CustomError(400, 'missing key "quantity"', ErrorTypes.BAD_REQUEST);
         }
-        console.log('quantity key ok');
         const data = await this.service.repository.getLastestMessagesForChannel(channelId, quantity, offset);
-        console.log('data');
-        console.log(data);
         callback(data);
       }
     );

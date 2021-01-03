@@ -243,7 +243,6 @@ export class SocketRepository {
   // getMessagesByDate = async ({}: { quantity: number; time: number; showBeforeTime?: boolean; showAfterTime?: boolean }) => {
 
   private getOldestOrNewestMessages = async (quantity: number, offset?: number, getNewestInstead?: boolean) => {
-    console.log('about to get messages+');
     const messages = await this.dao.getAll<ChatMessage & { displayName: string }>(
       `SELECT m.id,
       m.timestamp,
@@ -256,7 +255,6 @@ export class SocketRepository {
       ORDER BY timestamp ${getNewestInstead ? 'DESC' : 'ASC'} LIMIT ?, ?`,
       [offset ?? 0, quantity]
     );
-    console.log(messages);
     return messages;
   };
 
