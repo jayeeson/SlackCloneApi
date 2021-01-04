@@ -109,6 +109,22 @@ export const seedDb = async () => {
       )`
   );
 
+  await _queryAsync<any>(
+    db,
+    `CREATE TABLE IF NOT EXISTS invite (
+        id INT(8) PRIMARY KEY AUTO_INCREMENT,
+        userId INT(8) NOT NULL,
+        inviterId INT(8) NOT NULL,
+        type INT(1) NOT NULL,
+        serverId INT(8) DEFAULT NULL,
+        channelId INT(8) DEFAULT NULL,
+        FOREIGN KEY (userId) REFERENCES user(id),
+        FOREIGN KEY (inviterId) REFERENCES user(id),
+        FOREIGN KEY (channelId) REFERENCES channel(id),
+        FOREIGN KEY (serverId) REFERENCES server(id)
+      )`
+  );
+
   console.log('seeded db');
   db.end();
 };
