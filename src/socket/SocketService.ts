@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { CustomError } from '../CustomError';
 import { verifyJwtAsync } from '../helpers/jwt';
 import { CreateChannelParams, ErrorTypes, JwtDecoded, User } from '../types';
@@ -28,7 +29,8 @@ export class SocketService {
   };
 
   getStartupData = async (token: string) => {
-    const user = (await verifyJwtAsync(token)) as Pick<JwtDecoded, keyof Omit<User, 'pass'>>;
+    const decoded = await verifyJwtAsync(token);
+    const user = _.omit(decoded, 'iat', 'exp', 'aud');
     const servers = await this.repository.getUserServers(user.username);
     const channels = await this.repository.getUserChannels(user.username);
     const serverIds = servers.map(server => server.id);

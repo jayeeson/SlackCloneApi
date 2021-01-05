@@ -103,6 +103,7 @@ export enum MessageContentType {
 export interface JwtDecoded extends Omit<User, 'pass'> {
   iat: string;
   exp: string;
+  aud?: string;
 }
 
 export enum ErrorTypes {

@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { hashPassword } from '../helpers/bcrypt';
 import bcrypt from 'bcrypt';
 import { AuthRepository } from './AuthRepository';
@@ -44,7 +45,7 @@ export class AuthService {
     if (!user) {
       throw new CustomError(401, 'authentication error, user not found', ErrorTypes.AUTH);
     }
-    const tokenPayload = user as Omit<User, 'pass'>;
+    const tokenPayload = _.omit(user, 'pass');
     const token = createToken(tokenPayload);
     return token;
   };
