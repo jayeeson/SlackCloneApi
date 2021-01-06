@@ -3,7 +3,7 @@ import events from 'events';
 import { ActiveSockets } from './ActiveSockets';
 import { SocketService } from './SocketService';
 import { getCookieFromRequest, verifySocketToken } from '../helpers/jwt';
-import { ChatMessagePacket, CreateChannelParams, ErrorTypes } from '../types';
+import { ChatChannel, ChatMessagePacket, CreateChannelParams, ErrorTypes } from '../types';
 import { CustomError } from '../CustomError';
 import { io } from '../index';
 
@@ -76,10 +76,6 @@ export class SocketController {
         throw new CustomError(401, 'not signed in', ErrorTypes.AUTH);
       }
       const data = await this.service.getStartupData(token);
-
-      if (!data.user) {
-        throw new CustomError(401, 'user does not exist', ErrorTypes.AUTH);
-      }
       callback(data);
     });
     socket.on('createServer', async ({ serverName }: { serverName: string }, callback: (args: any) => void) => {
@@ -102,8 +98,9 @@ export class SocketController {
           addTheseUsers,
           autoAddNewMembers,
         }: CreateChannelParams,
-        { callback }: { callback: (args: any) => void }
+        callback: (args: any) => void
       ) => {
+        console.log('received create channel req');
         const token = getCookieFromRequest(socket.request);
         if (!token) {
           throw new CustomError(401, 'not signed in', ErrorTypes.AUTH);
@@ -179,14 +176,14 @@ export class SocketController {
         if (!serverId) {
           throw new CustomError(400, 'missing key "serverId"', ErrorTypes.BAD_REQUEST);
         }
-        const { timestamp, userId, id, displayName } = await this.service.sendMessage({ text, channelId, token });
-        const message: ChatMessagePacket = { id, content: text, channelId, serverId, timestamp, userId, displayName };
+        const { timestamp, userId, id } = await this.service.sendMessage({ text, channelId, token });
+        const message: ChatMessagePacket = { id, content: text, channelId, serverId, timestamp, userId };
         io.to(`server#${serverId}`).to(`channel#${channelId}`).emit('message', message);
       }
     );
 
-    socket.on('error', err => {
-      console.log('error', err);
-    });
+    // socket.on('error', err => {
+    //   console.log('error', err);
+    // });
   };
 }

@@ -47,6 +47,7 @@ const jwtOptions = {
 
 const cookieOptions: CookieOptions = {
   httpOnly: true,
+  sameSite: 'lax',
 };
 
 const cookie = {

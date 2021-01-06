@@ -5,7 +5,7 @@ import config from '../config';
 import { JwtDecoded, User } from '../types';
 import timespan from '../utils/timespan';
 
-export const createToken = (data: Omit<User, 'pass'>) => {
+export const createToken = (data: { userId: number }) => {
   const token = jwt.sign(data, config.jwt.tokenSecret, config.jwt.options);
   return token;
 };

@@ -56,7 +56,7 @@ export class AuthController {
     const token = req.cookies[config.jwt.cookie.name];
 
     if (token) {
-      const signedInToken = await this.service.isValidToken(token);
+      const signedInToken = await this.service.getTokenIfValid(token);
       if (signedInToken) {
         return res.send(signedInToken.username);
       }

@@ -6,7 +6,7 @@ import { authService } from '../auth/authRoutes';
 
 export const requireToken = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.cookies[config.jwt.cookie.name];
-  const validToken = await authService.isValidToken(token);
+  const validToken = await authService.getTokenIfValid(token);
   if (!validToken) {
     throw new CustomError(401, 'Not authenticated', ErrorTypes.VALIDATION);
   }

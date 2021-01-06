@@ -19,10 +19,10 @@ export class SocketRepository {
     this.dao = dao;
   }
 
-  addClient = async (socketId: string, username: string | undefined) => {
-    return await this.dao.run('INSERT INTO client (socketId, userId) SELECT ?, id FROM user WHERE username = ?', [
+  addClient = async (socketId: string, userId: number | undefined) => {
+    return await this.dao.run('INSERT INTO client (socketId, userId) SELECT ?, id FROM user WHERE id = ?', [
       socketId,
-      username ?? '',
+      userId ?? 0,
     ]);
   };
 
@@ -36,15 +36,12 @@ export class SocketRepository {
 
   clientLogin = async (socketId: string, username: string) => {
     const updated = await this.dao.run(
-      'UPDATE client SET userId = (SELECT id FROM user WHERE username = ?) WHERE socketId = ?',
+      `REPLACE INTO client (userId, socketId) VALUES (
+        (SELECT id FROM user WHERE username = ?),
+        ?
+      )`,
       [username, socketId]
     );
-    if (updated.affectedRows === 0) {
-      return await this.dao.run('INSERT INTO client (socketId, userId) SELECT ?, u.id FROM user u WHERE username = ?', [
-        socketId,
-        username,
-      ]);
-    }
     return updated;
   };
 
@@ -56,20 +53,25 @@ export class SocketRepository {
     return await this.dao.run('TRUNCATE TABLE client');
   };
 
-  getUserServers = async (username: string) => {
+  getUserServers = async (userId: number) => {
     const servers = await this.dao.getAll<ChatServer>(
       `SELECT s.id, s.name, s.ownerUserId FROM server s
         LEFT JOIN link_server_user lsu ON s.id = lsu.serverId
         LEFT JOIN user u ON lsu.userId = u.id
-        WHERE u.username = ?`,
-      [username]
+        WHERE u.id = ?`,
+      [userId]
     );
+
+    const serverIds = servers.map(server => server.id);
+    if (!serverIds.length) {
+      return servers;
+    }
 
     const usersInServers = await this.dao.getAll<{ serverId: number; userIds: string }>(
       `SELECT serverId, GROUP_CONCAT(userId) userIds FROM link_server_user
       WHERE serverId IN (?)
       GROUP BY serverId`,
-      [servers.map(server => server.id)]
+      [serverIds]
     );
     const usersInServersObjArray = usersInServers.map(usersInServer => ({
       serverId: usersInServer.serverId,
@@ -85,20 +87,25 @@ export class SocketRepository {
     return serversWithUserIds;
   };
 
-  getUserChannels = async (username: string) => {
+  getUserChannels = async (userId: number) => {
     const channels = await this.dao.getAll<ChatChannel>(
       `SELECT c.id, c.name, c.serverId, c.isPrivate, c.topic, c.autoAddNewMembers, c.description FROM channel c
         LEFT JOIN link_channel_user lcu ON c.id = lcu.channelId
         LEFT JOIN user u ON lcu.userId = u.id
-        WHERE u.username = ?`,
-      [username]
+        WHERE u.id = ?`,
+      [userId]
     );
+
+    const channelIds = channels.map(channel => channel.id);
+    if (!channelIds.length) {
+      return channels;
+    }
 
     const usersInChannels = await this.dao.getAll<{ channelId: number; userIds: string }>(
       `SELECT channelId, GROUP_CONCAT(userId) userIds FROM link_channel_user
       WHERE channelId IN (?)
       GROUP BY channelId`,
-      [channels.map(channel => channel.id)]
+      [channelIds]
     );
     const usersInChannelsObjArray = usersInChannels.map(usersInChannel => ({
       channelId: usersInChannel.channelId,
@@ -114,14 +121,13 @@ export class SocketRepository {
     return channelsWithUserIds;
   };
 
-  getUser = async (username: string) => {
-    return await this.dao.getOne<Omit<User, 'pass'>>(
-      'SELECT id, username, displayName FROM user WHERE username = (?)',
-      [username]
-    );
+  getUser = async (userId: number) => {
+    return await this.dao.getOne<Omit<User, 'pass'>>('SELECT id, username, displayName FROM user WHERE id = (?)', [
+      userId,
+    ]);
   };
 
-  getUsersInServers = async (servers: number[]): Promise<Pick<User, 'id' | 'username' | 'displayName'>[]> => {
+  getUsersInServers = async (servers: number[]): Promise<Omit<User, 'pass'>[]> => {
     if (!servers.length) {
       return [];
     }
@@ -133,36 +139,29 @@ export class SocketRepository {
     );
   };
 
-  createServer = async (username: string, inputServerName?: string) => {
-    const usernameWithFirstLetterCapitalized = username.slice(0, 1).toLocaleUpperCase() + username.slice(1);
-    const useServerName = inputServerName ?? `${usernameWithFirstLetterCapitalized}'s Server`;
-    const newServerResponse = await this.dao.run(
-      `INSERT INTO server (name, ownerUserId) VALUES(
-        ?,
-        (SELECT id FROM user WHERE user.username = ? )
-      )`,
-      [useServerName, username]
-    );
-    await this.dao.run(
-      `INSERT INTO link_server_user (serverId, userId) VALUES(
-        ?,
-        (SELECT id FROM user WHERE user.username = ? )
-      )`,
-      [newServerResponse.insertId, username]
-    );
+  createServer = async (userId: number, inputServerName: string) => {
+    const newServerResponse = await this.dao.run('INSERT INTO server (name, ownerUserId) VALUES(?,?)', [
+      inputServerName,
+      userId,
+      userId,
+    ]);
+    await this.dao.run('INSERT INTO link_server_user (serverId, userId) VALUES(?,?)', [
+      newServerResponse.insertId,
+      userId,
+    ]);
     const createdServer = await this.dao.getOne<ChatServer>('SELECT * FROM server WHERE id = ?', [
       newServerResponse.insertId,
     ]);
 
     // create two default channels
     if (createdServer) {
-      const generalChannel = await this.createChannel(username, {
+      const generalChannel = await this.createChannel(userId, {
         channelName: 'General',
         serverId: createdServer.id,
         description: 'This is the General channel where anything goes.',
         autoAddNewMembers: true,
       });
-      const randomChannel = await this.createChannel(username, {
+      const randomChannel = await this.createChannel(userId, {
         channelName: 'Random',
         serverId: createdServer.id,
         description: 'This is the Random channel, home of off-topic discussions.',
@@ -175,18 +174,15 @@ export class SocketRepository {
     }
   };
 
-  deleteServer = async (serverName: string, username: string) => {
-    return await this.dao.run(
-      'DELETE FROM server WHERE name = ? AND ownerUserId = (SELECT id FROM user WHERE username = ?)',
-      [serverName, username]
-    );
+  deleteServer = async (serverName: string, userId: number) => {
+    return await this.dao.run('DELETE FROM server WHERE name = ? AND ownerUserId = ?', [serverName, userId]);
   };
 
   getChannelById = async (id: number) => {
     return await this.dao.getOne<ChatChannel>('SELECT * FROM channel WHERE id = ?', [id]);
   };
 
-  createChannel = async (username: string, params: CreateChannelParams) => {
+  createChannel = async (userId: number, params: CreateChannelParams) => {
     const { channelName, serverId, description, isPrivate, addEveryone, addTheseUsers, autoAddNewMembers } = params;
     const newChannel = await this.dao.run(
       'INSERT INTO channel (name, serverId, description, isPrivate, autoAddNewMembers) VALUES(?, ?, ?, ?, ?)',
@@ -198,6 +194,11 @@ export class SocketRepository {
         autoAddNewMembers ?? false,
       ]
     );
+
+    if (!newChannel) {
+      throw new CustomError(500, 'could not create new server channel', ErrorTypes.DB);
+    }
+
     if (addEveryone) {
       await this.dao.run(
         `INSERT INTO link_channel_user (channelId, userId) SELECT ?, u.id FROM user u 
@@ -211,29 +212,26 @@ export class SocketRepository {
         `INSERT INTO link_channel_user (channelId, userId) SELECT ?, u.id FROM user u 
           INNER JOIN link_server_user lsu ON u.id = lsu.userId
           WHERE lsu.serverId = ?
-          AND u.username IN ?`,
-        [newChannel.insertId, params.serverId, [...addTheseUsers, username]]
+          AND u.id IN ?`,
+        [newChannel.insertId, params.serverId, [...addTheseUsers, userId]]
       );
     } else {
       // just add channel creator
       await this.dao.run(
         `INSERT INTO link_channel_user (channelId, userId)
-          SELECT ?, u.id FROM user u WHERE u.username = ?`,
-        [newChannel.insertId, username]
+          SELECT ?, ?`,
+        [newChannel.insertId, userId]
       );
-    }
-    if (!newChannel) {
-      throw new CustomError(500, 'could not create new server channel', ErrorTypes.DB);
     }
     return this.getChannelById(newChannel.insertId);
   };
 
   isUserInServer = async ({
-    username,
+    userId,
     serverId,
     channelId,
   }: {
-    username: string;
+    userId: number;
     serverId?: number;
     channelId?: number;
   }) => {
@@ -241,9 +239,9 @@ export class SocketRepository {
       const server = await this.dao.getOne<{ serverId: number; username: string; displayName: string }>(
         `SELECT lsu.serverId, u.username, u.displayName FROM link_server_user lsu 
           LEFT JOIN user u ON lsu.userId = u.id 
-          WHERE u.username = ? 
+          WHERE u.id = ? 
             AND lsu.serverId = ?`,
-        [username, serverId]
+        [userId, serverId]
       );
       return Boolean(server);
     } else if (channelId) {
@@ -251,40 +249,40 @@ export class SocketRepository {
         `SELECT lsu.serverId, u.username, u.displayName FROM link_server_user lsu 
         LEFT JOIN user u ON lsu.userId = u.id
         LEFT JOIN channel c ON c.serverId = lsu.serverId
-        WHERE u.username = ? 
+        WHERE u.id = ? 
           AND c.id = ?`,
-        [username, channelId]
+        [userId, channelId]
       );
       return Boolean(server);
     }
   };
 
-  isUserInChannel = async ({ username, channelId }: { username: string; channelId?: number }) => {
+  isUserInChannel = async ({ userId, channelId }: { userId: number; channelId?: number }) => {
     const channel = await this.dao.getOne<{ channelId: number }>(
       `SELECT lcu.channelId FROM link_channel_user lcu 
         LEFT JOIN user u ON lcu.userId = u.id
-        WHERE u.username = ? 
+        WHERE u.id = ? 
           AND lcu.channelId = ?`,
-      [username, channelId]
+      [userId, channelId]
     );
     return Boolean(channel);
   };
 
   sendMessage = async ({
-    username,
+    userId,
     text,
     channelId,
     timestamp,
   }: {
-    username: string;
+    userId: number;
     channelId: number;
     text: string;
     timestamp: number;
   }) => {
     const contentType = MessageContentType.MESSAGE;
     const message = await this.dao.run(
-      `INSERT INTO message (contentType, channelId, content, timestamp, userId) SELECT ?, ?, ?, ?, id FROM user WHERE username = ?`,
-      [contentType, channelId, text, timestamp, username]
+      `INSERT INTO message (contentType, channelId, content, timestamp, userId) SELECT ?, ?, ?, ?, id FROM user WHERE id = ?`,
+      [contentType, channelId, text, timestamp, userId]
     );
     return message;
   };

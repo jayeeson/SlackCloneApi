@@ -8,8 +8,9 @@ export class AuthRepository {
     this.dao = dao;
   }
 
-  getByUser = async (username: string) => {
-    return await this.dao.getOne<User>('SELECT * FROM user WHERE username = (?)', [username]);
+  getUser = async (user: string | number) => {
+    const column = typeof user === 'string' ? 'username' : 'id';
+    return await this.dao.getOne<User>(`SELECT * FROM user WHERE ${column} = (?)`, [user]);
   };
 
   createUser = async (username: string, hash: string) => {

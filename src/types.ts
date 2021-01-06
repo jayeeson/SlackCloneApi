@@ -34,7 +34,6 @@ export interface ChatMessagePacket {
   serverId: number;
   userId: number;
   timestamp: number;
-  displayName: string;
   // deleted: boolean;
   // contentType: MessageContentType;
 }
@@ -100,7 +99,8 @@ export enum MessageContentType {
   THREAD_REPLY = MessageContentTypeKey.THREAD + MessageContentTypeKey.MESSAGE,
 }
 
-export interface JwtDecoded extends Omit<User, 'pass'> {
+export interface JwtDecoded {
+  userId: number;
   iat: string;
   exp: string;
   aud?: string;
@@ -121,7 +121,7 @@ export interface CreateChannelParams {
   description?: string;
   isPrivate?: boolean;
   addEveryone?: boolean;
-  addTheseUsers?: string[];
+  addTheseUsers?: number[];
   autoAddNewMembers?: boolean;
 }
 

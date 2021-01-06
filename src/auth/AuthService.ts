@@ -14,7 +14,7 @@ export class AuthService {
   }
 
   login = async (username: string, password: string) => {
-    const user = await this.repository.getByUser(username);
+    const user = await this.repository.getUser(username);
     if (!user) {
       throw new CustomError(401, 'user not found', ErrorTypes.VALIDATION);
     }
@@ -26,7 +26,7 @@ export class AuthService {
   };
 
   register = async (username: string, password: string) => {
-    const user = await this.repository.getByUser(username);
+    const user = await this.repository.getUser(username);
     if (user) {
       throw new CustomError(403, 'Username already taken', ErrorTypes.VALIDATION);
     }
@@ -41,28 +41,27 @@ export class AuthService {
   };
 
   generateToken = async (username: string) => {
-    const user = await this.repository.getByUser(username);
+    const user = await this.repository.getUser(username);
     if (!user) {
       throw new CustomError(401, 'authentication error, user not found', ErrorTypes.AUTH);
     }
-    const tokenPayload = _.omit(user, 'pass');
-    const token = createToken(tokenPayload);
+    const token = createToken({ userId: user.id });
     return token;
   };
 
-  isValidToken = async (token: string) => {
+  getTokenIfValid = async (token: string) => {
     if (!token) {
       return null;
     }
-    const valid = await verifyJwtAsync(token);
-    if (!valid) {
+    const decoded = await verifyJwtAsync(token);
+    if (!decoded) {
       return null;
     }
     const blacklisted = await this.repository.isTokenBlacklisted(token);
     if (blacklisted) {
       return null;
     }
-    const userRow = await this.repository.getByUser(valid.username);
+    const userRow = await this.repository.getUser(decoded.userId);
     return userRow;
   };
 }
