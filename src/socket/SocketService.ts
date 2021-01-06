@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { CustomError } from '../CustomError';
 import { verifyJwtAsync } from '../helpers/jwt';
-import { CreateChannelParams, ErrorTypes, JwtDecoded, User } from '../types';
+import { ChatChannel, ChatServer, CreateChannelParams, ErrorTypes, JwtDecoded, User } from '../types';
 import { SocketRepository } from './SocketRepository';
 
 export class SocketService {
@@ -31,8 +31,8 @@ export class SocketService {
   getStartupData = async (token: string) => {
     const decoded = await verifyJwtAsync(token);
     const user = _.omit(decoded, 'iat', 'exp', 'aud');
-    const servers = await this.repository.getUserServers(user.username);
-    const channels = await this.repository.getUserChannels(user.username);
+    const servers: (ChatServer & { userIds: number[] })[] = await this.repository.getUserServers(user.username);
+    const channels: (ChatChannel & { userIds: number[] })[] = await this.repository.getUserChannels(user.username);
     const serverIds = servers.map(server => server.id);
     const users = await this.repository.getUsersInServers(serverIds);
     return { servers, channels, user, users };

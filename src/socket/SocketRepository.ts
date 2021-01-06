@@ -73,12 +73,13 @@ export class SocketRepository {
     );
     const usersInServersObjArray = usersInServers.map(usersInServer => ({
       serverId: usersInServer.serverId,
-      userIds: usersInServer.userIds.split(','),
+      userIds: usersInServer.userIds.split(',').map(userId => parseInt(userId, 10)),
     }));
 
     const serversWithUserIds = servers.map(server => ({
       ...server,
-      userIds: usersInServersObjArray.find(usersInServersObj => server.id === usersInServersObj.serverId)?.userIds,
+      userIds:
+        usersInServersObjArray.find(usersInServersObj => server.id === usersInServersObj.serverId)?.userIds || [],
     }));
 
     return serversWithUserIds;
@@ -101,12 +102,13 @@ export class SocketRepository {
     );
     const usersInChannelsObjArray = usersInChannels.map(usersInChannel => ({
       channelId: usersInChannel.channelId,
-      userIds: usersInChannel.userIds.split(','),
+      userIds: usersInChannel.userIds.split(',').map(userId => parseInt(userId, 10)),
     }));
 
     const channelsWithUserIds = channels.map(channel => ({
       ...channel,
-      userIds: usersInChannelsObjArray.find(usersInChannelsObj => channel.id === usersInChannelsObj.channelId)?.userIds,
+      userIds:
+        usersInChannelsObjArray.find(usersInChannelsObj => channel.id === usersInChannelsObj.channelId)?.userIds || [],
     }));
 
     return channelsWithUserIds;
