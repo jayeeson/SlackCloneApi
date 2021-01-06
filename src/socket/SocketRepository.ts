@@ -57,23 +57,59 @@ export class SocketRepository {
   };
 
   getUserServers = async (username: string) => {
-    return await this.dao.getAll<ChatServer>(
+    const servers = await this.dao.getAll<ChatServer>(
       `SELECT s.id, s.name, s.ownerUserId FROM server s
         LEFT JOIN link_server_user lsu ON s.id = lsu.serverId
         LEFT JOIN user u ON lsu.userId = u.id
         WHERE u.username = ?`,
       [username]
     );
+
+    const usersInServers = await this.dao.getAll<{ serverId: number; userIds: string }>(
+      `SELECT serverId, GROUP_CONCAT(userId) userIds FROM link_server_user
+      WHERE serverId IN (?)
+      GROUP BY serverId`,
+      [servers.map(server => server.id)]
+    );
+    const usersInServersObjArray = usersInServers.map(usersInServer => ({
+      serverId: usersInServer.serverId,
+      userIds: usersInServer.userIds.split(','),
+    }));
+
+    const serversWithUserIds = servers.map(server => ({
+      ...server,
+      userIds: usersInServersObjArray.find(usersInServersObj => server.id === usersInServersObj.serverId)?.userIds,
+    }));
+
+    return serversWithUserIds;
   };
 
   getUserChannels = async (username: string) => {
-    return await this.dao.getAll<ChatChannel>(
+    const channels = await this.dao.getAll<ChatChannel>(
       `SELECT c.id, c.name, c.serverId, c.isPrivate, c.topic, c.autoAddNewMembers, c.description FROM channel c
         LEFT JOIN link_channel_user lcu ON c.id = lcu.channelId
         LEFT JOIN user u ON lcu.userId = u.id
         WHERE u.username = ?`,
       [username]
     );
+
+    const usersInChannels = await this.dao.getAll<{ channelId: number; userIds: string }>(
+      `SELECT channelId, GROUP_CONCAT(userId) userIds FROM link_channel_user
+      WHERE channelId IN (?)
+      GROUP BY channelId`,
+      [channels.map(channel => channel.id)]
+    );
+    const usersInChannelsObjArray = usersInChannels.map(usersInChannel => ({
+      channelId: usersInChannel.channelId,
+      userIds: usersInChannel.userIds.split(','),
+    }));
+
+    const channelsWithUserIds = channels.map(channel => ({
+      ...channel,
+      userIds: usersInChannelsObjArray.find(usersInChannelsObj => channel.id === usersInChannelsObj.channelId)?.userIds,
+    }));
+
+    return channelsWithUserIds;
   };
 
   getUser = async (username: string) => {
