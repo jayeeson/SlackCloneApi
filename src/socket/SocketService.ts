@@ -1,7 +1,6 @@
-import _ from 'lodash';
 import { CustomError } from '../CustomError';
 import { verifyJwtAsync } from '../helpers/jwt';
-import { ChatChannel, ChatServer, CreateChannelParams, ErrorTypes, JwtDecoded } from '../types';
+import { CreateChannelParams, ErrorTypes, JwtDecoded } from '../types';
 import { SocketRepository } from './SocketRepository';
 
 export class SocketService {
@@ -66,5 +65,25 @@ export class SocketService {
     const timestamp = new Date().getTime();
     const messageOkPacket = await this.repository.sendMessage({ userId, channelId, text, timestamp });
     return { timestamp, userId, id: messageOkPacket.insertId };
+  };
+
+  sendDirectMessage = async ({ token, text, recipients }: { token: string; text: string; recipients: number[] }) => {
+    const { userId: sender } = await verifyJwtAsync(token);
+    // const messageOkPacket = await this.repository.sendDirectMessage({ text, sender, recipients });
+    const users = [...recipients, sender];
+    const dmChannel =
+      (await this.repository.getDmChannelFromUsers(users)) || (await this.repository.createDmChannel(users));
+    const timestamp = new Date().getTime();
+    const messageOkPacket = await this.repository.sendDirectMessage({
+      text,
+      sender,
+      timestamp,
+      channelId: dmChannel,
+    });
+    return { timestamp, userId: sender, id: messageOkPacket.insertId, dmChannelId: dmChannel };
+  };
+
+  getSocketIdsFromUserIds = async (users: number[]) => {
+    return await this.repository.getSocketIdsFromUserIds(users);
   };
 }

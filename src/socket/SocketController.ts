@@ -3,7 +3,7 @@ import events from 'events';
 import { ActiveSockets } from './ActiveSockets';
 import { SocketService } from './SocketService';
 import { getCookieFromRequest, verifySocketToken } from '../helpers/jwt';
-import { ChatChannel, ChatMessagePacket, CreateChannelParams, ErrorTypes } from '../types';
+import { ChatMessagePacket, CreateChannelParams, ErrorTypes } from '../types';
 import { CustomError } from '../CustomError';
 import { io } from '../index';
 
@@ -182,8 +182,37 @@ export class SocketController {
       }
     );
 
-    // socket.on('error', err => {
-    //   console.log('error', err);
-    // });
+    socket.on('directMessage', async ({ text, recipients }: { text: string; sender: number; recipients: number[] }) => {
+      const token = getCookieFromRequest(socket.request);
+      if (!token) {
+        throw new CustomError(401, 'not signed in', ErrorTypes.AUTH);
+      }
+      if (!text) {
+        throw new CustomError(400, 'missing key "text"', ErrorTypes.BAD_REQUEST);
+      }
+      if (!recipients) {
+        throw new CustomError(400, 'missing key "recipients"', ErrorTypes.BAD_REQUEST);
+      }
+      ///\todo: check all users exist first, and are "visible" to current user.
+      const { timestamp, userId: sender, id: messageId, dmChannelId } = await this.service.sendDirectMessage({
+        token,
+        text,
+        recipients,
+      });
+
+      const directMessage: Omit<ChatMessagePacket, 'serverId'> = {
+        id: messageId,
+        content: text,
+        channelId: dmChannelId,
+        timestamp,
+        userId: sender,
+      };
+      const socketIds = await this.service.getSocketIdsFromUserIds([...recipients, sender]);
+      socketIds.forEach(socketId => io.to(socketId.socketId).emit('directMessage', directMessage));
+    });
+
+    socket.on('error', err => {
+      console.log('error', err);
+    });
   };
 }

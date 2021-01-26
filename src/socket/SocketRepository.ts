@@ -287,6 +287,75 @@ export class SocketRepository {
     return message;
   };
 
+  getDmChannelFromUsers = async (users: number[]) => {
+    // 1. check table against array: [...recipients, sender]. need ALL these ids and NO MORE -> result T / F
+    const members = Array.from(new Set(users)); // distinct entries
+    if (members.length < 1) {
+      return;
+    }
+    const queryBuilder = members.reduce(
+      (acc, cur, index) => (index === members.length - 1 ? `${acc}?` : `${acc}?,`),
+      ''
+    );
+    const existingChannelId = await this.dao.getOne<{ dmChannelId: number; memberCount: number }>(
+      `SELECT dmChannelId, COUNT(userId) AS memberCount 
+        FROM link_dmChannel_user ldu 
+        INNER JOIN dmChannel dmc ON ldu.dmChannelId = dmc.id
+        WHERE ldu.userId IN (${queryBuilder})
+        GROUP BY ldu.dmChannelId
+        HAVING memberCount=?
+        ORDER BY dmChannelId ASC`,
+      [...members, members.length]
+    );
+    return existingChannelId?.dmChannelId;
+  };
+
+  createDmChannel = async (users: number[]) => {
+    const members = Array.from(new Set(users)); // distinct entries
+    if (members.length < 1) {
+      throw new CustomError(400, 'cannot create channel with 0 members', ErrorTypes.BAD_REQUEST);
+    }
+    const existingChannelId = await this.getDmChannelFromUsers(users);
+    if (existingChannelId) {
+      console.log('aborting request to create a dm channel that already exists');
+      return existingChannelId;
+    }
+    const newChannelId = (await this.dao.run('INSERT INTO dmChannel (members) VALUE (?)', [members.length])).insertId;
+    // link
+    const insertParamQueryBuilder = members.reduce(
+      (acc, cur, index) => `${acc}(?,?)${index === members.length - 1 ? ';' : ',\n'}`,
+      ''
+    );
+    const insertParams = members.reduce((acc, cur) => [...acc, newChannelId, cur], [] as number[]);
+    await this.dao.run(
+      `INSERT INTO link_dmChannel_user (dmChannelId, userId) VALUES ${insertParamQueryBuilder}`,
+      insertParams
+    );
+    return newChannelId;
+  };
+
+  sendDirectMessage = async ({
+    text,
+    sender,
+    channelId,
+    timestamp,
+  }: {
+    text: string;
+    sender: number;
+    channelId: number;
+    timestamp: number;
+  }) => {
+    const contentType = MessageContentType.MESSAGE;
+    const message = await this.dao.run(
+      `INSERT INTO directMessage (contentType, channelId, content, timestamp, userId) SELECT ?, ?, ?, ?, id FROM user WHERE id = ?`,
+      [contentType, channelId, text, timestamp, sender]
+    );
+    if (!message.insertId) {
+      throw new CustomError(500, 'could not add new direct message to db', ErrorTypes.DB);
+    }
+    return message;
+  };
+
   ///\todo: implement more sophisticated message getters
   // getMessagesByDate = async ({}: { quantity: number; time: number; showBeforeTime?: boolean; showAfterTime?: boolean }) => {
 
@@ -353,5 +422,15 @@ export class SocketRepository {
       );
       return addToServer;
     }
+  };
+
+  getSocketIdsFromUserIds = async (users: number[]) => {
+    const userIdsQueryBuilder = users.reduce(
+      (acc, cur, index) => (index === users.length - 1 ? `${acc}?` : `${acc}?,`),
+      ''
+    );
+    return await this.dao.getAll<{ socketId: string }>(
+      `SELECT socketId FROM client WHERE userId IN (${userIdsQueryBuilder})`
+    );
   };
 }
