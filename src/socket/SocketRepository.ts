@@ -5,12 +5,14 @@ import {
   ChatMessage,
   ChatServer,
   CreateChannelParams,
+  DmChannelFrontEnd,
   ErrorTypes,
   MessageContentType,
   User,
 } from '../types';
 import config from '../config';
 import { CustomError } from '../CustomError';
+import { parameterizeArrayForQuery } from '../db/db';
 
 export class SocketRepository {
   dao: IDao;
@@ -121,6 +123,18 @@ export class SocketRepository {
     return channelsWithUserIds;
   };
 
+  ///\todo: delete this, probably
+  // getUserDmChannels = async (userId: number) => {
+  //   const dmChannels = await this.dao.getAll<{ id: number }>(
+  //     `SELECT dmc.id FROM dmChannel dmc
+  //       LEFT JOIN link_dmChannel_user ldu ON dmc.id = ldu.dmChannelId
+  //       WHERE ldu.userId = ?`,
+  //     [userId]
+  //   );
+  //   const dmChannelIds = dmChannels.map(dmChannel => dmChannel.id);
+  //   return dmChannelIds;
+  // };
+
   getUser = async (userId: number) => {
     return await this.dao.getOne<Omit<User, 'pass'>>('SELECT id, username, displayName FROM user WHERE id = (?)', [
       userId,
@@ -132,11 +146,42 @@ export class SocketRepository {
       return [];
     }
     return await this.dao.getAll<Omit<User, 'pass'>>(
-      `SELECT u.id, u.username, u.displayName FROM user u 
+      `SELECT DISTINCT u.id, u.username, u.displayName FROM user u 
       LEFT JOIN link_server_user lsu ON lsu.userId = u.id
       WHERE lsu.serverId IN (?)`,
       [servers]
     );
+  };
+
+  getUserDmChannels = async (userId: number): Promise<DmChannelFrontEnd[]> => {
+    const data = await this.dao.getAll<{ dmChannelId: number; userId: number; username: string }>(
+      `SELECT ldu.dmChannelId, ldu2.userId, user.username FROM link_dmChannel_user ldu
+      INNER JOIN link_dmChannel_user ldu2 ON ldu.dmChannelId=ldu2.dmChannelId
+      INNER JOIN user ON ldu2.userId = user.id
+      WHERE ldu.userId = ?`,
+      [userId]
+    );
+
+    const dmChannelIds = data.reduce((prev, cur) => {
+      return [...prev, cur.dmChannelId];
+    }, [] as number[]);
+
+    const uniqueDmChannelIds = Array.from(new Set(dmChannelIds));
+
+    const dmChannels = uniqueDmChannelIds.map(id => {
+      const users = data
+        .filter(row => row.dmChannelId === id)
+        .reduce((acc, cur) => {
+          return [...acc, { userId: cur.userId, username: cur.username }];
+        }, [] as { userId: number; username: string }[]);
+
+      return {
+        id,
+        users,
+      };
+    });
+
+    return dmChannels;
   };
 
   createServer = async (userId: number, inputServerName: string) => {
@@ -289,23 +334,21 @@ export class SocketRepository {
 
   getDmChannelFromUsers = async (users: number[]) => {
     // 1. check table against array: [...recipients, sender]. need ALL these ids and NO MORE -> result T / F
-    const members = Array.from(new Set(users)); // distinct entries
-    if (members.length < 1) {
+    const parameterizedUsers = parameterizeArrayForQuery(users);
+    if (!parameterizedUsers) {
       return;
     }
-    const queryBuilder = members.reduce(
-      (acc, cur, index) => (index === members.length - 1 ? `${acc}?` : `${acc}?,`),
-      ''
-    );
+    const { distinctValueArray: distinctUsers, parameterString } = parameterizedUsers;
+
     const existingChannelId = await this.dao.getOne<{ dmChannelId: number; memberCount: number }>(
       `SELECT dmChannelId, COUNT(userId) AS memberCount 
         FROM link_dmChannel_user ldu 
         INNER JOIN dmChannel dmc ON ldu.dmChannelId = dmc.id
-        WHERE ldu.userId IN (${queryBuilder})
+        WHERE ldu.userId IN (${parameterString})
         GROUP BY ldu.dmChannelId
         HAVING memberCount=?
         ORDER BY dmChannelId ASC`,
-      [...members, members.length]
+      [...distinctUsers, distinctUsers.length]
     );
     return existingChannelId?.dmChannelId;
   };
@@ -401,7 +444,7 @@ export class SocketRepository {
     );
   };
 
-  // // list of active users
+  // list of active users
   getLoggedInUsersForServer = async (serverId: number) => {
     return await this.dao.getAll<{ userId: number }>('SELECT userId FROM client WHERE serverId = ?', [serverId]);
   };
@@ -425,12 +468,14 @@ export class SocketRepository {
   };
 
   getSocketIdsFromUserIds = async (users: number[]) => {
-    const userIdsQueryBuilder = users.reduce(
-      (acc, cur, index) => (index === users.length - 1 ? `${acc}?` : `${acc}?,`),
-      ''
-    );
+    const parameterizedUsers = parameterizeArrayForQuery(users);
+    if (!parameterizedUsers) {
+      return;
+    }
+    const { distinctValueArray: distinctUsers, parameterString } = parameterizedUsers;
     return await this.dao.getAll<{ socketId: string }>(
-      `SELECT socketId FROM client WHERE userId IN (${userIdsQueryBuilder})`
+      `SELECT socketId FROM client WHERE userId IN (${parameterString})`,
+      distinctUsers
     );
   };
 }

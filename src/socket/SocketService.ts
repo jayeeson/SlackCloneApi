@@ -33,7 +33,11 @@ export class SocketService {
     const channels = await this.repository.getUserChannels(userId);
     const serverIds = servers.map(server => server.id);
     const users = await this.repository.getUsersInServers(serverIds);
-    return { servers, channels, userId, users };
+    const dmChannels = await this.repository.getUserDmChannels(userId);
+    // const distinctUsers = _.unionBy(users, dmChannelUsers, 'id');
+    // console.log(distinctUsers);
+    ///\todo: remove users from sent data; and include the users array in the Servers / Channels array
+    return { servers, channels, dmChannels, userId, users };
   };
 
   createServer = async (token: string, serverName: string) => {

@@ -59,7 +59,7 @@ export const seedDb = async () => {
     db,
     `CREATE TABLE IF NOT EXISTS dmChannel (
         id INT(8) AUTO_INCREMENT,
-        members INT(3) NOT NULL,
+        memberCount INT(3) NOT NULL,
         PRIMARY KEY (id)
       )`
   );
@@ -93,6 +93,7 @@ export const seedDb = async () => {
         dmChannelId INT(8) NOT NULL,
         userId INT(8) NOT NULL,
         lastAccess DATETIME DEFAULT NULL,
+        displayInSidebar BOOLEAN DEFAULT TRUE,
         FOREIGN KEY (dmChannelId) REFERENCES dmChannel(id) ON DELETE CASCADE,
         FOREIGN KEY (userId) REFERENCES user(id) ON DELETE CASCADE,
         UNIQUE(dmChannelId, userId)

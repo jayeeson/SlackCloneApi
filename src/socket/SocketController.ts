@@ -208,6 +208,9 @@ export class SocketController {
         userId: sender,
       };
       const socketIds = await this.service.getSocketIdsFromUserIds([...recipients, sender]);
+      if (!socketIds) {
+        return;
+      }
       socketIds.forEach(socketId => io.to(socketId.socketId).emit('directMessage', directMessage));
     });
 

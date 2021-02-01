@@ -75,6 +75,19 @@ export interface ChatChannel {
   description?: string;
 }
 
+export interface ChatDmChannel {
+  id: number;
+  members: boolean;
+}
+
+export interface DmChannelFrontEnd {
+  id: number;
+  users: {
+    userId: number;
+    username: string;
+  }[];
+}
+
 export interface LinkChannelUser {
   channelId: number;
   userId: number;
