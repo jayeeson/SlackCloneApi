@@ -17,8 +17,8 @@ seedDb();
 const app = express();
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(handleCustomErrors);
 app.use(authRoutes);
+app.use(handleCustomErrors);
 
 const server = http.createServer(app);
 export const io = new Server(server);

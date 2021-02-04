@@ -11,7 +11,7 @@ const mode: Mode = process.env.NODE_ENV === 'production' ? Mode.PROD : Mode.DEV;
 const https = false;
 
 const protocol = `http${https ? 's' : ''}`;
-const host = process.env.HOST || 'localhost';
+const host = process.env.HOST ?? 'localhost';
 const dbPort = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306;
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const url = mode === Mode.PROD ? `${protocol}://${host}` : `${protocol}://${host}:${port}`;
