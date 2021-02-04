@@ -34,7 +34,13 @@ Yarn and MySQL should be installed. MySQL process should be running.
    - `HOST` (optional): hostname where you want the app to run (default is `localhost`)
    - `PORT` (optional): port you want the app to run on (default is `3000`)
 
-<!-- ROADMAP -->
+### Usage
+
+Start the app with
+
+```
+yarn start
+```
 
 <!-- LICENSE -->
 
