@@ -13,6 +13,7 @@ import {
 import config from '../config';
 import { CustomError } from '../CustomError';
 import { parameterizeArrayForQuery } from '../db/db';
+import { cachedDataVersionTag } from 'v8';
 
 export class SocketRepository {
   dao: IDao;
@@ -426,21 +427,46 @@ export class SocketRepository {
     return this.getOldestOrNewestMessages(quantity, offset, true);
   };
 
-  getLastestMessagesForChannel = async (channelId: number, numberOfMessages: number, offset?: number) => {
-    return await this.dao.getAll<ChatMessage & { username: string; displayName: string }>(
-      `SELECT m.id,
-          m.timestamp,
-          m.content,
-          m.channelId,
-          m.contentType,
-          u.id AS userId,
-          u.displayName
+  getLastestMessagesForChannel = async (channelId: string, numberOfMessages: number, offset?: number) => {
+    if (channelId.slice(0, 2) === 'c#') {
+      const cid = channelId.slice(2);
+      return await this.dao.getAll<ChatMessage & { username: string; displayName: string }>(
+        `SELECT m.id,
+        m.timestamp,
+        m.content,
+        m.channelId,
+        m.contentType,
+        u.id AS userId,
+        u.displayName
         FROM message m
         LEFT JOIN user u
-          ON m.userId = u.id 
+        ON m.userId = u.id 
         WHERE m.channelId = ?
-          ORDER BY m.timestamp DESC LIMIT ?, ?;`,
-      [channelId, offset ?? 0, numberOfMessages]
+        ORDER BY m.timestamp DESC LIMIT ?, ?;`,
+        [cid, offset ?? 0, numberOfMessages]
+      );
+    }
+  };
+
+  getLastMessageForDmChannels = async (dmChannelId: number | number[]) => {
+    const ids = Array.isArray(dmChannelId) ? dmChannelId : [dmChannelId];
+    if (!ids.length) {
+      return [] as ChatMessage[];
+    }
+    return await this.dao.getAll<ChatMessage & { username: string; displayName: string }>(
+      `SELECT dm.id,
+      dm.timestamp,
+      dm.content,
+      dm.dmChannelId,
+      dm.contentType,
+      u.id AS userId,
+      u.displayName
+    FROM directMessage dm
+    LEFT JOIN user u
+      ON dm.userId = u.id 
+    WHERE dm.dmChannelId IN (?)
+      ORDER BY dm.timestamp DESC`,
+      [ids]
     );
   };
 

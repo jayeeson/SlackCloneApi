@@ -3,7 +3,7 @@ import events from 'events';
 import { ActiveSockets } from './ActiveSockets';
 import { SocketService } from './SocketService';
 import { getCookieFromRequest, verifySocketToken } from '../helpers/jwt';
-import { ChatMessagePacket, CreateChannelParams, ErrorTypes } from '../types';
+import { ChatChannel, ChatMessagePacket, CreateChannelParams, ErrorTypes } from '../types';
 import { CustomError } from '../CustomError';
 import { io } from '../index';
 
@@ -63,9 +63,15 @@ export class SocketController {
       }
     });
 
-    socket.on('setActiveChannel', ({ newChannel, oldChannel }: { newChannel: number; oldChannel: number }) => {
-      socket.join(`channel#${newChannel}`);
-      if (oldChannel && oldChannel !== newChannel) {
+    socket.on('setActiveChannel', ({ newChannel, oldChannel }: { newChannel: string; oldChannel: string }) => {
+      if (newChannel.slice(0, 2) === 'c#' || newChannel.slice(0, 3) === 'dm#') {
+        socket.join(`channel#${newChannel}`);
+      }
+      if (
+        oldChannel &&
+        oldChannel !== newChannel &&
+        (oldChannel.slice(0, 2) !== 'c#' || oldChannel.slice(0, 3) === 'dm#')
+      ) {
         socket.leave(`channel#${oldChannel}`);
       }
     });
@@ -98,7 +104,7 @@ export class SocketController {
           addTheseUsers,
           autoAddNewMembers,
         }: CreateChannelParams,
-        callback: (args: any) => void
+        callback: (arg: ChatChannel) => void
       ) => {
         console.log('received create channel req');
         const token = getCookieFromRequest(socket.request);
@@ -147,9 +153,10 @@ export class SocketController {
     socket.on(
       'getLatestMessagesForChannel',
       async (
-        { channelId, quantity, offset }: { channelId: number; quantity: number; offset?: number },
+        { channelId, quantity, offset }: { channelId: string; quantity: number; offset?: number },
         callback: (args: any) => void
       ) => {
+        console.log('getting latest messages for channel', channelId);
         if (!channelId) {
           throw new CustomError(400, 'missing key "channelId"', ErrorTypes.BAD_REQUEST);
         }
@@ -157,6 +164,17 @@ export class SocketController {
           throw new CustomError(400, 'missing key "quantity"', ErrorTypes.BAD_REQUEST);
         }
         const data = await this.service.repository.getLastestMessagesForChannel(channelId, quantity, offset);
+        callback(data);
+      }
+    );
+    socket.on(
+      'getLastMessageForDmChannels',
+      async ({ dmChannelId }: { dmChannelId: number | number[] }, callback: (args: any) => void) => {
+        if (!dmChannelId) {
+          throw new CustomError(400, 'missing key "dmChannelId"', ErrorTypes.BAD_REQUEST);
+        }
+        const data = await this.service.repository.getLastMessageForDmChannels(dmChannelId);
+        console.log(data);
         callback(data);
       }
     );
