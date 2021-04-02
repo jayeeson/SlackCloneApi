@@ -155,23 +155,23 @@ export class SocketRepository {
   };
 
   getUserDmChannels = async (userId: number): Promise<DmChannelFrontEnd[]> => {
-    const data = await this.dao.getAll<{ dmChannelId: number; userId: number; username: string }>(
-      `SELECT ldu.dmChannelId, ldu2.userId, user.username FROM link_dmChannel_user ldu
-      INNER JOIN link_dmChannel_user ldu2 ON ldu.dmChannelId=ldu2.dmChannelId
+    const data = await this.dao.getAll<{ channelId: number; userId: number; username: string }>(
+      `SELECT ldu.channelId, ldu2.userId, user.username FROM link_dmChannel_user ldu
+      INNER JOIN link_dmChannel_user ldu2 ON ldu.channelId=ldu2.channelId
       INNER JOIN user ON ldu2.userId = user.id
       WHERE ldu.userId = ?`,
       [userId]
     );
 
     const dmChannelIds = data.reduce((prev, cur) => {
-      return [...prev, cur.dmChannelId];
+      return [...prev, cur.channelId];
     }, [] as number[]);
 
     const uniqueDmChannelIds = Array.from(new Set(dmChannelIds));
 
     const dmChannels = uniqueDmChannelIds.map(id => {
       const users = data
-        .filter(row => row.dmChannelId === id)
+        .filter(row => row.channelId === id)
         .reduce((acc, cur) => {
           return [...acc, { userId: cur.userId, username: cur.username }];
         }, [] as { userId: number; username: string }[]);
@@ -341,17 +341,17 @@ export class SocketRepository {
     }
     const { distinctValueArray: distinctUsers, parameterString } = parameterizedUsers;
 
-    const existingChannelId = await this.dao.getOne<{ dmChannelId: number; memberCount: number }>(
-      `SELECT dmChannelId, COUNT(userId) AS memberCount 
+    const existingChannelId = await this.dao.getOne<{ channelId: number; memberCount: number }>(
+      `SELECT channelId, COUNT(userId) AS memberCount 
         FROM link_dmChannel_user ldu 
-        INNER JOIN dmChannel dmc ON ldu.dmChannelId = dmc.id
+        INNER JOIN dmChannel dmc ON ldu.channelId = dmc.id
         WHERE ldu.userId IN (${parameterString})
-        GROUP BY ldu.dmChannelId
+        GROUP BY ldu.channelId
         HAVING memberCount=?
-        ORDER BY dmChannelId ASC`,
+        ORDER BY channelId ASC`,
       [...distinctUsers, distinctUsers.length]
     );
-    return existingChannelId?.dmChannelId;
+    return existingChannelId?.channelId;
   };
 
   createDmChannel = async (users: number[]) => {
@@ -372,7 +372,7 @@ export class SocketRepository {
     );
     const insertParams = members.reduce((acc, cur) => [...acc, newChannelId, cur], [] as number[]);
     await this.dao.run(
-      `INSERT INTO link_dmChannel_user (dmChannelId, userId) VALUES ${insertParamQueryBuilder}`,
+      `INSERT INTO link_dmChannel_user (channelId, userId) VALUES ${insertParamQueryBuilder}`,
       insertParams
     );
     return newChannelId;
@@ -453,18 +453,19 @@ export class SocketRepository {
     if (!ids.length) {
       return [] as ChatMessage[];
     }
+
     return await this.dao.getAll<ChatMessage & { username: string; displayName: string }>(
       `SELECT dm.id,
       dm.timestamp,
       dm.content,
-      dm.dmChannelId,
+      dm.channelId,
       dm.contentType,
       u.id AS userId,
       u.displayName
     FROM directMessage dm
     LEFT JOIN user u
       ON dm.userId = u.id 
-    WHERE dm.dmChannelId IN (?)
+    WHERE dm.channelId IN (?)
       ORDER BY dm.timestamp DESC`,
       [ids]
     );
@@ -503,5 +504,27 @@ export class SocketRepository {
       `SELECT socketId FROM client WHERE userId IN (${parameterString})`,
       distinctUsers
     );
+  };
+
+  /**
+   *
+   * @param userIds - array of userIds to add to server
+   * @param serverId - id of server to add to
+   * @returns userIds receiving invitation to the server
+   */
+  inviteUsersToServer = async (inviterId: number, userIds: number[], serverId: number) => {
+    const usersAlreadyInServer = await this.dao.getAll<{ userId: number }>(
+      `SELECT userId FROM link_server_user lsu WHERE lsu.serverId = ? AND lsu.userId IN (?)`,
+      [serverId, userIds]
+    );
+
+    const usersToAdd = userIds.filter(id => usersAlreadyInServer.find(existingUser => existingUser.userId === id));
+
+    const invite = await this.dao.run(
+      `INSERT INTO invite (userId, inviterId, type, serverId) SELECT u.id, ?, 0, ? FROM user u WHERE u.id IN (?)`,
+      [inviterId, serverId, usersToAdd]
+    );
+
+    return usersToAdd;
   };
 }

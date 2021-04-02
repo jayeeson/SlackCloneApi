@@ -34,8 +34,8 @@ export interface ChatMessagePacket {
   serverId: number;
   userId: number;
   timestamp: number;
+  contentType: MessageContentType;
   // deleted: boolean;
-  // contentType: MessageContentType;
 }
 
 export interface ChatMessageContent {
@@ -103,6 +103,7 @@ export enum MessageContentTypeKey {
   MESSAGE = 1,
   QUOTE = 2,
   THREAD = 4,
+  INVITE = 8,
 }
 
 export enum MessageContentType {
@@ -110,6 +111,7 @@ export enum MessageContentType {
   QUOTE = MessageContentTypeKey.QUOTE,
   THREAD_PARENT = MessageContentTypeKey.THREAD,
   THREAD_REPLY = MessageContentTypeKey.THREAD + MessageContentTypeKey.MESSAGE,
+  INVITE = MessageContentTypeKey.INVITE,
 }
 
 export interface JwtDecoded {

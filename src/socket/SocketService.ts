@@ -84,7 +84,24 @@ export class SocketService {
       timestamp,
       channelId: dmChannel,
     });
-    return { timestamp, userId: sender, id: messageOkPacket.insertId, dmChannelId: dmChannel };
+    return { timestamp, userId: sender, id: messageOkPacket.insertId, channelId: dmChannel };
+  };
+
+  inviteUsersToServer = async ({
+    token,
+    userIds,
+    serverId,
+  }: {
+    token: string;
+    userIds: number[];
+    serverId: number;
+  }) => {
+    const { userId } = await verifyJwtAsync(token);
+    const usersToAdd = await this.repository.inviteUsersToServer(userId, userIds, serverId);
+    return {
+      usersToAdd,
+      userId,
+    };
   };
 
   getSocketIdsFromUserIds = async (users: number[]) => {

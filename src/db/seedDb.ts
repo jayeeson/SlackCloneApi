@@ -90,13 +90,13 @@ export const seedDb = async () => {
   await _queryAsync<any>(
     db,
     `CREATE TABLE IF NOT EXISTS link_dmChannel_user (
-        dmChannelId INT(8) NOT NULL,
+        channelId INT(8) NOT NULL,
         userId INT(8) NOT NULL,
         lastAccess DATETIME DEFAULT NULL,
         displayInSidebar BOOLEAN DEFAULT TRUE,
-        FOREIGN KEY (dmChannelId) REFERENCES dmChannel(id) ON DELETE CASCADE,
+        FOREIGN KEY (channelId) REFERENCES dmChannel(id) ON DELETE CASCADE,
         FOREIGN KEY (userId) REFERENCES user(id) ON DELETE CASCADE,
-        UNIQUE(dmChannelId, userId)
+        UNIQUE(channelId, userId)
       )`
   );
 
@@ -126,13 +126,13 @@ export const seedDb = async () => {
         timestamp BIGINT NOT NULL,
         content TEXT DEFAULT NULL,
         userId INT(8) DEFAULT NULL,
-        dmChannelId INT(8) NOT NULL,
+        channelId INT(8) NOT NULL,
         deleted BOOLEAN DEFAULT 0,
         quoteMsgId INT(12) DEFAULT NULL,
         threadParentMessageId INT(12) DEFAULT NULL,
         PRIMARY KEY (id),
         FOREIGN KEY (userId) REFERENCES user(id),
-        FOREIGN KEY (dmChannelId) REFERENCES dmChannel(id)
+        FOREIGN KEY (channelId) REFERENCES dmChannel(id)
       )`
   );
 
